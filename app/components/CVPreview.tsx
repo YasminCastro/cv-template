@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef } from "react";
-import { CVData } from "./CVBuilder";
+import { CVData, CVColors } from "./CVBuilder";
 import { CVTypography } from "./cvTypography";
 import { Language, locales } from "./cvLocale";
 
@@ -9,6 +9,7 @@ type Props = {
   data: CVData;
   typography: CVTypography;
   language: Language;
+  colors: CVColors;
 };
 
 function parseBullets(text: string): string[] {
@@ -25,7 +26,7 @@ function buildContactItems(data: CVData): ContactItem[] {
   if (data.location) items.push({ label: data.location });
   if (data.email)
     items.push({ label: data.email, href: `mailto:${data.email}` });
-  if (data.phone) items.push({ label: data.phone });
+  if (data.phone) items.push({ label: data.phone, href: `tel:${data.phone.replace(/\s/g, '')}` });
   if (data.website) {
     const href = data.website.startsWith("http")
       ? data.website
@@ -42,7 +43,7 @@ function buildContactItems(data: CVData): ContactItem[] {
 }
 
 const CVPreview = forwardRef<HTMLDivElement, Props>(function CVPreview(
-  { data, typography: t, language },
+  { data, typography: t, language, colors },
   ref,
 ) {
   const locale = locales[language];
@@ -102,7 +103,7 @@ const CVPreview = forwardRef<HTMLDivElement, Props>(function CVPreview(
           </h1>
         )}
         {data.title && (
-          <p style={{ ...t.cargo, margin: "6px 0 0" }}>{data.title}</p>
+          <p style={{ ...t.cargo, margin: "6px 0 0", color: colors.cargo }}>{data.title}</p>
         )}
         {contactItems.length > 0 && (
           <p style={{ ...t.contactItems, margin: "8px 0 0" }}>
@@ -171,7 +172,7 @@ const CVPreview = forwardRef<HTMLDivElement, Props>(function CVPreview(
                     {headingParts.map((part, i) => (
                       <span key={i}>
                         {i === 0 ? (
-                          <span style={{ fontWeight: "bold" }}>{part}</span>
+                          <span style={{ fontWeight: "bold", color: colors.cargo }}>{part}</span>
                         ) : (
                           <span style={{ fontWeight: "normal" }}>
                             {i === 1 ? ", " : " – "}
@@ -238,7 +239,7 @@ const CVPreview = forwardRef<HTMLDivElement, Props>(function CVPreview(
                     alignItems: "baseline",
                   }}
                 >
-                  <p style={{ margin: 0, fontWeight: "bold", ...t.titulosEntrada }}>
+                  <p style={{ margin: 0, fontWeight: "bold", ...t.titulosEntrada, color: colors.cargo }}>
                     {edu.institution}
                   </p>
                   {years && (
@@ -290,7 +291,7 @@ const CVPreview = forwardRef<HTMLDivElement, Props>(function CVPreview(
                     alignItems: "baseline",
                   }}
                 >
-                  <p style={{ margin: 0, fontWeight: "bold", ...t.titulosEntrada }}>
+                  <p style={{ margin: 0, fontWeight: "bold", ...t.titulosEntrada, color: colors.cargo }}>
                     {heading || proj.name}
                   </p>
                   {dateRange && (

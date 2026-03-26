@@ -7,6 +7,10 @@ import CVPreview from './CVPreview'
 import { cvTypography, CVTypography } from './cvTypography'
 import { Language } from './cvLocale'
 
+export type CVColors = {
+  cargo: string
+}
+
 export type Experience = {
   id: string
   company: string
@@ -104,6 +108,7 @@ function ScaledPreview({ children }: { children: React.ReactNode }) {
 export default function CVBuilder() {
   const [data, setData] = useState<CVData>(initialData)
   const [language, setLanguage] = useState<Language>('pt')
+  const [colors, setColors] = useState<CVColors>({ cargo: '#1a4f8a' })
   const [typography, setTypography] = useState<CVTypography>({
     nome:          { ...cvTypography.nome },
     cargo:         { ...cvTypography.cargo },
@@ -136,7 +141,7 @@ export default function CVBuilder() {
 
   const handlePrint = useReactToPrint({
     contentRef: cvRef,
-    documentTitle: data.name ? `Currículo - ${data.name}` : 'Currículo',
+    documentTitle: data.name ? `CV-${data.name.replace(/\s+/g, '')}` : 'CV',
     pageStyle: `
       @font-face {
         font-family: 'Charter';
@@ -181,11 +186,11 @@ export default function CVBuilder() {
   return (
     <div className="flex h-screen overflow-hidden bg-gray-100">
       <div className="w-1/2 overflow-y-auto border-r border-gray-200 bg-white">
-        <CVForm data={data} onChange={handleChange} typography={typography} onTypographyChange={setTypography} onPrint={() => handlePrint()} language={language} onLanguageChange={setLanguage} />
+        <CVForm data={data} onChange={handleChange} typography={typography} onTypographyChange={setTypography} onPrint={() => handlePrint()} language={language} onLanguageChange={setLanguage} colors={colors} onColorsChange={setColors} />
       </div>
       <div className="w-1/2 overflow-y-auto bg-gray-100 p-8">
         <ScaledPreview>
-          <CVPreview ref={cvRef} data={data} typography={typography} language={language} />
+          <CVPreview ref={cvRef} data={data} typography={typography} language={language} colors={colors} />
         </ScaledPreview>
       </div>
 

@@ -1,7 +1,7 @@
 "use client";
 
 
-import { CVData, Experience, Education, Project } from "./CVBuilder";
+import { CVData, CVColors, Experience, Education, Project } from "./CVBuilder";
 import { CVTypography, TypographyEntry } from "./cvTypography";
 import { Language, LANGUAGE_LABELS } from "./cvLocale";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -17,6 +17,8 @@ type Props = {
   onPrint: () => void;
   language: Language;
   onLanguageChange: (l: Language) => void;
+  colors: CVColors;
+  onColorsChange: (c: CVColors) => void;
 };
 
 const TYPOGRAPHY_LABELS: Record<keyof CVTypography, string> = {
@@ -32,7 +34,7 @@ function randomId() {
   return Math.random().toString(36).slice(2, 9);
 }
 
-export default function CVForm({ data, onChange, typography, onTypographyChange, onPrint, language, onLanguageChange }: Props) {
+export default function CVForm({ data, onChange, typography, onTypographyChange, onPrint, language, onLanguageChange, colors, onColorsChange }: Props) {
   function updateTypographyField(
     key: keyof CVTypography,
     field: keyof TypographyEntry,
@@ -142,13 +144,65 @@ export default function CVForm({ data, onChange, typography, onTypographyChange,
     <div className="p-6 space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-gray-950">Editar Currículo</h1>
-        <Dialog>
-          <DialogTrigger className="flex items-center gap-1.5 rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
-            </svg>
-            Tipografia
-          </DialogTrigger>
+        <div className="flex items-center gap-2">
+          <Dialog>
+            <DialogTrigger className="flex items-center gap-1.5 rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+              </svg>
+              Tipografia
+            </DialogTrigger>
+            <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Configurações de Tipografia</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-5 mt-2">
+                {(Object.keys(TYPOGRAPHY_LABELS) as (keyof CVTypography)[]).map((key) => (
+                  <div key={key}>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
+                      {TYPOGRAPHY_LABELS[key]}
+                    </p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {(["fontSize", "lineHeight", "letterSpacing"] as (keyof TypographyEntry)[]).map((field) => (
+                        <div key={field}>
+                          <Label className="text-xs text-gray-500 mb-1">{field}</Label>
+                          <Input
+                            value={typography[key][field]}
+                            onChange={(e) => updateTypographyField(key, field, e.target.value)}
+                            className="text-xs h-7"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </DialogContent>
+          </Dialog>
+          <Dialog>
+            <DialogTrigger className="flex items-center gap-1.5 rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3"/><path d="M2 12h2M20 12h2M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+              </svg>
+              Cores
+            </DialogTrigger>
+            <DialogContent className="max-w-xs">
+              <DialogHeader>
+                <DialogTitle>Cores de Destaque</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 mt-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-medium text-gray-800">Cargo / Título</label>
+                  <input
+                    type="color"
+                    value={colors.cargo}
+                    onChange={(e) => onColorsChange({ ...colors, cargo: e.target.value })}
+                    className="h-7 w-12 cursor-pointer rounded border border-gray-300 bg-white p-0.5"
+                  />
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
           <Select value={language} onValueChange={(val) => onLanguageChange(val as Language)}>
             <SelectTrigger className="w-32">
               <SelectValue />
@@ -170,33 +224,7 @@ export default function CVForm({ data, onChange, typography, onTypographyChange,
             </svg>
             Baixar PDF
           </button>
-          <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Configurações de Tipografia</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-5 mt-2">
-              {(Object.keys(TYPOGRAPHY_LABELS) as (keyof CVTypography)[]).map((key) => (
-                <div key={key}>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
-                    {TYPOGRAPHY_LABELS[key]}
-                  </p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {(["fontSize", "lineHeight", "letterSpacing"] as (keyof TypographyEntry)[]).map((field) => (
-                      <div key={field}>
-                        <Label className="text-xs text-gray-500 mb-1">{field}</Label>
-                        <Input
-                          value={typography[key][field]}
-                          onChange={(e) => updateTypographyField(key, field, e.target.value)}
-                          className="text-xs h-7"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </DialogContent>
-        </Dialog>
+        </div>
       </div>
 
       {/* Dados Pessoais */}
@@ -267,13 +295,25 @@ export default function CVForm({ data, onChange, typography, onTypographyChange,
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-800 mb-1">
-              Website / Portfólio / LinkedIn
+              Website / Portfólio
             </label>
             <input
               type="text"
               value={data.website}
               onChange={(e) => set("website", e.target.value)}
               placeholder="yascastro.com.br"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-800 mb-1">
+              LinkedIn
+            </label>
+            <input
+              type="text"
+              value={data.linkedin}
+              onChange={(e) => set("linkedin", e.target.value)}
+              placeholder="linkedin.com/in/yasmincastro"
               className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
