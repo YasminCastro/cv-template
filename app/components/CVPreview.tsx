@@ -1,0 +1,392 @@
+"use client";
+
+import { forwardRef } from "react";
+import { CVData } from "./CVBuilder";
+import { cvTypography as t } from "./cvTypography";
+
+type Props = {
+  data: CVData;
+};
+
+function formatMonthPt(value: string) {
+  if (!value) return "";
+  const [year, month] = value.split("-");
+  const months = [
+    "jan",
+    "fev",
+    "mar",
+    "abr",
+    "mai",
+    "jun",
+    "jul",
+    "ago",
+    "set",
+    "out",
+    "nov",
+    "dez",
+  ];
+  return `${months[parseInt(month) - 1]} de ${year}`;
+}
+
+function parseBullets(text: string): string[] {
+  return text
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+}
+
+type ContactItem = { label: string; href?: string };
+
+function buildContactItems(data: CVData): ContactItem[] {
+  const items: ContactItem[] = [];
+  if (data.location) items.push({ label: data.location });
+  if (data.email)
+    items.push({ label: data.email, href: `mailto:${data.email}` });
+  if (data.phone) items.push({ label: data.phone });
+  if (data.website) {
+    const href = data.website.startsWith("http")
+      ? data.website
+      : `https://${data.website}`;
+    items.push({ label: data.website, href });
+  }
+  if (data.linkedin) {
+    const href = data.linkedin.startsWith("http")
+      ? data.linkedin
+      : `https://${data.linkedin}`;
+    items.push({ label: data.linkedin, href });
+  }
+  return items;
+}
+
+const CVPreview = forwardRef<HTMLDivElement, Props>(function CVPreview(
+  { data },
+  ref,
+) {
+  const contactItems = buildContactItems(data);
+
+  const isEmpty =
+    !data.name &&
+    !data.title &&
+    !data.summary &&
+    data.experience.length === 0 &&
+    data.education.length === 0 &&
+    data.projects.length === 0 &&
+    data.skills.length === 0 &&
+    contactItems.length === 0;
+
+  if (isEmpty) {
+    return (
+      <div ref={ref} className="flex h-full items-center justify-center">
+        <p className="text-sm text-gray-400">
+          Preencha o formulário para visualizar o currículo
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      ref={ref}
+      className="cv-content bg-white shadow-md"
+      style={{
+        fontFamily: '"Charter", Georgia, serif',
+        width: "816px",
+        minHeight: "1055px",
+        padding: "0.8cm 68px 57px",
+        color: "#111",
+        textAlign: "justify",
+        ...t.textos,
+      }}
+    >
+      {/* Header */}
+      <div style={{ textAlign: "center", marginBottom: "4px" }}>
+        {data.name && (
+          <h1
+            style={{
+              ...t.nome,
+              fontWeight: "normal",
+              margin: 0,
+            }}
+          >
+            {data.name}
+          </h1>
+        )}
+        {data.title && (
+          <p style={{ ...t.cargo, margin: "6px 0 0" }}>{data.title}</p>
+        )}
+        {contactItems.length > 0 && (
+          <p style={{ ...t.contactItems, margin: "8px 0 0" }}>
+            {contactItems.map((item, i) => (
+              <span key={i}>
+                {i > 0 && " | "}
+                {item.href ? (
+                  <a
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ textDecoration: "none" }}
+                  >
+                    {item.label}
+                  </a>
+                ) : (
+                  item.label
+                )}
+              </span>
+            ))}
+          </p>
+        )}
+      </div>
+
+      {/* Resumo */}
+      {data.summary && (
+        <Section title="Resumo">
+          <p style={{ margin: 0, ...t.textos, textAlign: "justify" }}>
+            {data.summary}
+          </p>
+        </Section>
+      )}
+
+      {/* Experiência */}
+      {data.experience.length > 0 && (
+        <Section title="Experiência">
+          {data.experience.map((exp) => {
+            const bullets = parseBullets(exp.description);
+            const dateRange = [
+              exp.startDate ? formatMonthPt(exp.startDate) : "",
+              exp.current
+                ? "o momento"
+                : exp.endDate
+                  ? formatMonthPt(exp.endDate)
+                  : "",
+            ]
+              .filter(Boolean)
+              .join(" – ");
+
+            const headingParts = [
+              exp.position,
+              exp.company,
+              exp.location,
+            ].filter(Boolean);
+
+            return (
+              <div key={exp.id} style={{ marginBottom: "12px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "baseline",
+                  }}
+                >
+                  <p style={{ margin: 0, fontWeight: "bold", ...t.titulosEntrada }}>
+                    {headingParts.map((part, i) => (
+                      <span key={i}>
+                        {i === 0 ? (
+                          <span style={{ fontWeight: "bold" }}>{part}</span>
+                        ) : (
+                          <span style={{ fontWeight: "normal" }}>
+                            {i === 1 ? ", " : " – "}
+                            {part}
+                          </span>
+                        )}
+                      </span>
+                    ))}
+                  </p>
+                  {dateRange && (
+                    <span
+                      style={{
+                        ...t.titulosEntrada,
+                        color: "#111",
+                        whiteSpace: "nowrap",
+                        marginLeft: "16px",
+                      }}
+                    >
+                      {dateRange.charAt(0).toUpperCase() + dateRange.slice(1)}
+                    </span>
+                  )}
+                </div>
+                {bullets.length > 0 && (
+                  <ul
+                    style={{
+                      margin: "8px 0 0",
+                      paddingLeft: "18px",
+                      listStyleType: "disc",
+                    }}
+                  >
+                    {bullets.map((b, i) => (
+                      <li
+                        key={i}
+                        style={{
+                          marginBottom: "4px",
+                          ...t.textos,
+                          textAlign: "justify",
+                        }}
+                      >
+                        {b}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
+        </Section>
+      )}
+
+      {/* Formação Acadêmica */}
+      {data.education.length > 0 && (
+        <Section title="Formação Acadêmica">
+          {data.education.map((edu) => {
+            const years = [edu.startDate, edu.endDate]
+              .filter(Boolean)
+              .join(" - ");
+            return (
+              <div key={edu.id} style={{ marginBottom: "8px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "baseline",
+                  }}
+                >
+                  <p style={{ margin: 0, fontWeight: "bold", ...t.titulosEntrada }}>
+                    {edu.institution}
+                  </p>
+                  {years && (
+                    <span
+                      style={{
+                        ...t.titulosEntrada,
+                        color: "#111",
+                        whiteSpace: "nowrap",
+                        marginLeft: "16px",
+                      }}
+                    >
+                      {years}
+                    </span>
+                  )}
+                </div>
+                {edu.degree && (
+                  <p style={{ margin: "2px 0 0", ...t.textos }}>{edu.degree}</p>
+                )}
+              </div>
+            );
+          })}
+        </Section>
+      )}
+
+      {/* Projetos */}
+      {data.projects.length > 0 && (
+        <Section title="Projetos e Experiências Relevantes">
+          {data.projects.map((proj) => {
+            const bullets = parseBullets(proj.description);
+            const dateRange = [
+              proj.startDate ? formatMonthPt(proj.startDate) : "",
+              proj.current
+                ? "o momento"
+                : proj.endDate
+                  ? formatMonthPt(proj.endDate)
+                  : "",
+            ]
+              .filter(Boolean)
+              .join(" – ");
+
+            const heading = [proj.role, proj.name].filter(Boolean).join(" - ");
+
+            return (
+              <div key={proj.id} style={{ marginBottom: "12px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "baseline",
+                  }}
+                >
+                  <p style={{ margin: 0, fontWeight: "bold", ...t.titulosEntrada }}>
+                    {heading || proj.name}
+                  </p>
+                  {dateRange && (
+                    <span
+                      style={{
+                        ...t.titulosEntrada,
+                        color: "#111",
+                        whiteSpace: "nowrap",
+                        marginLeft: "16px",
+                      }}
+                    >
+                      {dateRange.charAt(0).toUpperCase() + dateRange.slice(1)}
+                    </span>
+                  )}
+                </div>
+                {bullets.length > 0 && (
+                  <ul
+                    style={{
+                      margin: "8px 0 0",
+                      paddingLeft: "18px",
+                      listStyleType: "disc",
+                    }}
+                  >
+                    {bullets.map((b, i) => (
+                      <li
+                        key={i}
+                        style={{
+                          marginBottom: "6px",
+                          ...t.textos,
+                          textAlign: "justify",
+                        }}
+                      >
+                        {b}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
+        </Section>
+      )}
+
+      {/* Habilidades */}
+      {(data.languages || data.skills.length > 0) && (
+        <Section title="Habilidades">
+          {data.languages && (
+            <p style={{ margin: "0 0 4px", ...t.textos }}>
+              <strong style={{ ...t.titulosEntrada }}>Idiomas:</strong> {data.languages}.
+            </p>
+          )}
+          {data.skills.length > 0 && (
+            <p style={{ margin: 0, ...t.textos }}>
+              <strong style={{ ...t.titulosEntrada }}>Habilidades Técnicas:</strong> {data.skills.join(", ")}.
+            </p>
+          )}
+        </Section>
+      )}
+    </div>
+  );
+});
+
+export default CVPreview;
+
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div style={{ marginTop: "4px" }}>
+      <h2
+        style={{
+          ...t.titulosSecao,
+          fontWeight: "bold",
+          margin: "0 0 2px",
+          borderBottom: "1px solid #111",
+          paddingBottom: "2px",
+        }}
+      >
+        {title}
+      </h2>
+      <div style={{ marginTop: "4px" }}>{children}</div>
+    </div>
+  );
+}
+
