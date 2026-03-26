@@ -1,3 +1,6 @@
+export type TypographyEntry = { fontSize: string; lineHeight: string; letterSpacing: string }
+export type CVTypography = { [K in keyof typeof cvTypography]: TypographyEntry }
+
 export const cvTypography = {
   nome: { fontSize: "32px", lineHeight: "30px", letterSpacing: "0.5px" },
   cargo: { fontSize: "20px", lineHeight: "20px", letterSpacing: "0px" },

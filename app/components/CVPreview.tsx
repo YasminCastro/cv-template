@@ -2,31 +2,14 @@
 
 import { forwardRef } from "react";
 import { CVData } from "./CVBuilder";
-import { cvTypography as t } from "./cvTypography";
+import { CVTypography } from "./cvTypography";
+import { Language, locales } from "./cvLocale";
 
 type Props = {
   data: CVData;
+  typography: CVTypography;
+  language: Language;
 };
-
-function formatMonthPt(value: string) {
-  if (!value) return "";
-  const [year, month] = value.split("-");
-  const months = [
-    "jan",
-    "fev",
-    "mar",
-    "abr",
-    "mai",
-    "jun",
-    "jul",
-    "ago",
-    "set",
-    "out",
-    "nov",
-    "dez",
-  ];
-  return `${months[parseInt(month) - 1]} de ${year}`;
-}
 
 function parseBullets(text: string): string[] {
   return text
@@ -59,10 +42,17 @@ function buildContactItems(data: CVData): ContactItem[] {
 }
 
 const CVPreview = forwardRef<HTMLDivElement, Props>(function CVPreview(
-  { data },
+  { data, typography: t, language },
   ref,
 ) {
+  const locale = locales[language];
   const contactItems = buildContactItems(data);
+
+  function formatMonth(value: string) {
+    if (!value) return "";
+    const [year, month] = value.split("-");
+    return locale.formatMonth(locale.months[parseInt(month) - 1], year);
+  }
 
   const isEmpty =
     !data.name &&
@@ -139,7 +129,7 @@ const CVPreview = forwardRef<HTMLDivElement, Props>(function CVPreview(
 
       {/* Resumo */}
       {data.summary && (
-        <Section title="Resumo">
+        <Section titulosSecao={t.titulosSecao} title={locale.sections.summary}>
           <p style={{ margin: 0, ...t.textos, textAlign: "justify" }}>
             {data.summary}
           </p>
@@ -148,15 +138,15 @@ const CVPreview = forwardRef<HTMLDivElement, Props>(function CVPreview(
 
       {/* Experiência */}
       {data.experience.length > 0 && (
-        <Section title="Experiência">
+        <Section titulosSecao={t.titulosSecao} title={locale.sections.experience}>
           {data.experience.map((exp) => {
             const bullets = parseBullets(exp.description);
             const dateRange = [
-              exp.startDate ? formatMonthPt(exp.startDate) : "",
+              exp.startDate ? formatMonth(exp.startDate) : "",
               exp.current
-                ? "o momento"
+                ? locale.present
                 : exp.endDate
-                  ? formatMonthPt(exp.endDate)
+                  ? formatMonth(exp.endDate)
                   : "",
             ]
               .filter(Boolean)
@@ -234,7 +224,7 @@ const CVPreview = forwardRef<HTMLDivElement, Props>(function CVPreview(
 
       {/* Formação Acadêmica */}
       {data.education.length > 0 && (
-        <Section title="Formação Acadêmica">
+        <Section titulosSecao={t.titulosSecao} title={locale.sections.education}>
           {data.education.map((edu) => {
             const years = [edu.startDate, edu.endDate]
               .filter(Boolean)
@@ -275,15 +265,15 @@ const CVPreview = forwardRef<HTMLDivElement, Props>(function CVPreview(
 
       {/* Projetos */}
       {data.projects.length > 0 && (
-        <Section title="Projetos e Experiências Relevantes">
+        <Section titulosSecao={t.titulosSecao} title={locale.sections.projects}>
           {data.projects.map((proj) => {
             const bullets = parseBullets(proj.description);
             const dateRange = [
-              proj.startDate ? formatMonthPt(proj.startDate) : "",
+              proj.startDate ? formatMonth(proj.startDate) : "",
               proj.current
-                ? "o momento"
+                ? locale.present
                 : proj.endDate
-                  ? formatMonthPt(proj.endDate)
+                  ? formatMonth(proj.endDate)
                   : "",
             ]
               .filter(Boolean)
@@ -346,15 +336,15 @@ const CVPreview = forwardRef<HTMLDivElement, Props>(function CVPreview(
 
       {/* Habilidades */}
       {(data.languages || data.skills.length > 0) && (
-        <Section title="Habilidades">
+        <Section titulosSecao={t.titulosSecao} title={locale.sections.skills}>
           {data.languages && (
             <p style={{ margin: "0 0 4px", ...t.textos }}>
-              <strong style={{ ...t.titulosEntrada }}>Idiomas:</strong> {data.languages}.
+              <strong style={{ ...t.titulosEntrada }}>{locale.sections.languages}:</strong> {data.languages}.
             </p>
           )}
           {data.skills.length > 0 && (
             <p style={{ margin: 0, ...t.textos }}>
-              <strong style={{ ...t.titulosEntrada }}>Habilidades Técnicas:</strong> {data.skills.join(", ")}.
+              <strong style={{ ...t.titulosEntrada }}>{locale.sections.technicalSkills}:</strong> {data.skills.join(", ")}.
             </p>
           )}
         </Section>
@@ -368,15 +358,17 @@ export default CVPreview;
 function Section({
   title,
   children,
+  titulosSecao,
 }: {
   title: string;
   children: React.ReactNode;
+  titulosSecao: React.CSSProperties;
 }) {
   return (
     <div style={{ marginTop: "4px" }}>
       <h2
         style={{
-          ...t.titulosSecao,
+          ...titulosSecao,
           fontWeight: "bold",
           margin: "0 0 2px",
           borderBottom: "1px solid #111",

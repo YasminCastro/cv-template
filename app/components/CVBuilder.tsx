@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useReactToPrint } from 'react-to-print'
 import CVForm from './CVForm'
 import CVPreview from './CVPreview'
+import { cvTypography, CVTypography } from './cvTypography'
+import { Language } from './cvLocale'
 
 export type Experience = {
   id: string
@@ -101,6 +103,15 @@ function ScaledPreview({ children }: { children: React.ReactNode }) {
 
 export default function CVBuilder() {
   const [data, setData] = useState<CVData>(initialData)
+  const [language, setLanguage] = useState<Language>('pt')
+  const [typography, setTypography] = useState<CVTypography>({
+    nome:          { ...cvTypography.nome },
+    cargo:         { ...cvTypography.cargo },
+    contactItems:  { ...cvTypography.contactItems },
+    titulosSecao:  { ...cvTypography.titulosSecao },
+    titulosEntrada:{ ...cvTypography.titulosEntrada },
+    textos:        { ...cvTypography.textos },
+  })
 
   useEffect(() => {
     try {
@@ -168,27 +179,16 @@ export default function CVBuilder() {
   })
 
   return (
-    <div className="relative flex h-screen overflow-hidden bg-gray-100">
+    <div className="flex h-screen overflow-hidden bg-gray-100">
       <div className="w-1/2 overflow-y-auto border-r border-gray-200 bg-white">
-        <CVForm data={data} onChange={handleChange} />
+        <CVForm data={data} onChange={handleChange} typography={typography} onTypographyChange={setTypography} onPrint={() => handlePrint()} language={language} onLanguageChange={setLanguage} />
       </div>
       <div className="w-1/2 overflow-y-auto bg-gray-100 p-8">
         <ScaledPreview>
-          <CVPreview ref={cvRef} data={data} />
+          <CVPreview ref={cvRef} data={data} typography={typography} language={language} />
         </ScaledPreview>
       </div>
-      <button
-        onClick={() => handlePrint()}
-        className="absolute flex items-center gap-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 transition-colors shadow-lg"
-        style={{ left: '50%', top: '8px', transform: 'translateX(-50%)', zIndex: 10 }}
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="7 10 12 15 17 10"/>
-          <line x1="12" y1="15" x2="12" y2="3"/>
-        </svg>
-        Baixar PDF
-      </button>
+
     </div>
   )
 }
