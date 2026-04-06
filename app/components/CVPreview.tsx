@@ -339,11 +339,11 @@ const CVPreview = forwardRef<HTMLDivElement, Props>(function CVPreview(
               <strong style={{ ...t.titulosEntrada }}>{locale.sections.languages}:</strong> {data.languages}.
             </p>
           )}
-          {data.skills.length > 0 && (
-            <p style={{ margin: 0, ...t.textos }}>
-              <strong style={{ ...t.titulosEntrada }}>{locale.sections.technicalSkills}:</strong> {data.skills.join(", ")}.
+          {data.skills.map((sg, i) => (
+            <p key={sg.id} style={{ margin: i < data.skills.length - 1 ? "0 0 4px" : "0", ...t.textos }}>
+              {sg.title && <strong style={{ ...t.titulosEntrada }}>{sg.title}:</strong>} {sg.text}
             </p>
-          )}
+          ))}
         </Section>
       )}
     </div>

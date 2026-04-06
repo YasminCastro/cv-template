@@ -37,6 +37,12 @@ export type Project = {
   description: string[]
 }
 
+export type SkillGroup = {
+  id: string
+  title: string
+  text: string
+}
+
 export type CVData = {
   name: string
   title: string
@@ -50,7 +56,7 @@ export type CVData = {
   education: Education[]
   projects: Project[]
   languages: string
-  skills: string[]
+  skills: SkillGroup[]
 }
 
 const initialData: CVData = {
@@ -135,6 +141,10 @@ export default function CVBuilder() {
               ? p.description
               : p.description.split('\n').map((s: string) => s.trim()).filter(Boolean),
           }))
+        }
+        // migração: skills string[] → SkillGroup[]
+        if (parsed.skills && parsed.skills.length > 0 && typeof parsed.skills[0] === 'string') {
+          parsed.skills = [{ id: Math.random().toString(36).slice(2, 9), title: 'Habilidades técnicas', text: parsed.skills.join(', ') }]
         }
         setData({ ...initialData, ...parsed })
       }

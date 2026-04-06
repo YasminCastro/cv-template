@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { CVData, Experience, Education, Project } from "./CVBuilder";
+import { CVData, Experience, Education, Project, SkillGroup } from "./CVBuilder";
 import { CVTypography } from "./cvTypography";
 import { Language } from "./cvLocale";
 import CVFormHeader from "./CVFormHeader";
@@ -62,7 +61,6 @@ function FormSection({
 }
 
 export default function CVForm({ data, onChange, typography, onTypographyChange, onPrint, language, onLanguageChange }: Props) {
-  const [rawSkills, setRawSkills] = useState(() => data.skills.join(", "));
 
   function set(field: keyof CVData, value: unknown) {
     onChange({ ...data, [field]: value });
@@ -130,8 +128,17 @@ export default function CVForm({ data, onChange, typography, onTypographyChange,
     set("projects", data.projects.filter((p) => p.id !== id));
   }
 
-  function updateSkills(raw: string) {
-    set("skills", raw.split(",").map((s) => s.trim()).filter(Boolean));
+  function addSkillGroup() {
+    const entry: SkillGroup = { id: randomId(), title: "", text: "" };
+    set("skills", [...data.skills, entry]);
+  }
+
+  function updateSkillGroup(id: string, field: keyof SkillGroup, value: string) {
+    set("skills", data.skills.map((s) => (s.id === id ? { ...s, [field]: value } : s)));
+  }
+
+  function removeSkillGroup(id: string) {
+    set("skills", data.skills.filter((s) => s.id !== id));
   }
 
   return (
@@ -521,31 +528,55 @@ export default function CVForm({ data, onChange, typography, onTypographyChange,
       </FormSection>
 
       {/* Habilidades */}
-      <FormSection title="Habilidades">
-        <div>
-          <label className="block text-xs font-medium text-gray-800 mb-1">Idiomas</label>
-          <input
-            type="text"
-            value={data.languages}
-            onChange={(e) => set("languages", e.target.value)}
-            placeholder="Português (nativo), Inglês (avançado)"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-800 mb-1">
-            Habilidades técnicas (separe por vírgula)
-          </label>
-          <textarea
-            value={rawSkills}
-            onChange={(e) => {
-              setRawSkills(e.target.value);
-              updateSkills(e.target.value);
-            }}
-            placeholder="JavaScript, TypeScript, Node.js, React, Next.js, PostgreSQL, Docker, AWS"
-            rows={3}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-          />
+      <FormSection
+        title="Habilidades"
+        action={
+          <button onClick={addSkillGroup} className="text-xs font-medium text-blue-600 hover:text-blue-700">
+            + Adicionar
+          </button>
+        }
+      >
+        <div className="space-y-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-800 mb-1">Idiomas</label>
+            <input
+              type="text"
+              value={data.languages}
+              onChange={(e) => set("languages", e.target.value)}
+              placeholder="Português (nativo), Inglês (avançado)"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          {data.skills.map((sg, i) => (
+            <div key={sg.id} className="rounded-md border border-gray-200 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-gray-500">Grupo {i + 1}</span>
+                <button onClick={() => removeSkillGroup(sg.id)} className="text-xs text-red-400 hover:text-red-600">
+                  Remover
+                </button>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-800 mb-1">Título</label>
+                <input
+                  type="text"
+                  value={sg.title}
+                  onChange={(e) => updateSkillGroup(sg.id, "title", e.target.value)}
+                  placeholder="Ex: Linguagens de programação"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-800 mb-1">Habilidades</label>
+                <input
+                  type="text"
+                  value={sg.text}
+                  onChange={(e) => updateSkillGroup(sg.id, "text", e.target.value)}
+                  placeholder="Ex: JavaScript, TypeScript, Python"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+          ))}
         </div>
       </FormSection>
     </div>
