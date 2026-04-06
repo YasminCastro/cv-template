@@ -7,9 +7,6 @@ import CVPreview from './CVPreview'
 import { cvTypography, CVTypography } from './cvTypography'
 import { Language } from './cvLocale'
 
-export type CVColors = {
-  cargo: string
-}
 
 export type Experience = {
   id: string
@@ -19,7 +16,7 @@ export type Experience = {
   startDate: string
   endDate: string
   current: boolean
-  description: string
+  description: string[]
 }
 
 export type Education = {
@@ -37,7 +34,7 @@ export type Project = {
   startDate: string
   endDate: string
   current: boolean
-  description: string
+  description: string[]
 }
 
 export type CVData = {
@@ -108,7 +105,6 @@ function ScaledPreview({ children }: { children: React.ReactNode }) {
 export default function CVBuilder() {
   const [data, setData] = useState<CVData>(initialData)
   const [language, setLanguage] = useState<Language>('pt')
-  const [colors, setColors] = useState<CVColors>({ cargo: '#1a4f8a' })
   const [typography, setTypography] = useState<CVTypography>({
     nome:          { ...cvTypography.nome },
     cargo:         { ...cvTypography.cargo },
@@ -121,7 +117,27 @@ export default function CVBuilder() {
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY)
-      if (saved) setData({ ...initialData, ...JSON.parse(saved) })
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        // migração: description string → string[]
+        if (parsed.experience) {
+          parsed.experience = parsed.experience.map((e: Experience) => ({
+            ...e,
+            description: Array.isArray(e.description)
+              ? e.description
+              : e.description.split('\n').map((s: string) => s.trim()).filter(Boolean),
+          }))
+        }
+        if (parsed.projects) {
+          parsed.projects = parsed.projects.map((p: Project) => ({
+            ...p,
+            description: Array.isArray(p.description)
+              ? p.description
+              : p.description.split('\n').map((s: string) => s.trim()).filter(Boolean),
+          }))
+        }
+        setData({ ...initialData, ...parsed })
+      }
     } catch {
       // storage indisponível
     }
@@ -141,7 +157,9 @@ export default function CVBuilder() {
 
   const handlePrint = useReactToPrint({
     contentRef: cvRef,
-    documentTitle: data.name ? `CV-${data.name.replace(/\s+/g, '')}` : 'CV',
+    documentTitle: data.name
+      ? `${data.name.replace(/\s+/g, '_')}_${language === 'en' ? 'Resume' : 'Curriculo'}`
+      : (language === 'en' ? 'Resume' : 'Curriculo'),
     pageStyle: `
       @font-face {
         font-family: 'Charter';
@@ -185,12 +203,12 @@ export default function CVBuilder() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-100">
-      <div className="w-1/2 overflow-y-auto border-r border-gray-200 bg-white">
-        <CVForm data={data} onChange={handleChange} typography={typography} onTypographyChange={setTypography} onPrint={() => handlePrint()} language={language} onLanguageChange={setLanguage} colors={colors} onColorsChange={setColors} />
+      <div className="w-1/2 overflow-y-auto border-r border-gray-200 bg-white" style={{ fontFamily: "var(--font-roboto), sans-serif" }}>
+        <CVForm data={data} onChange={handleChange} typography={typography} onTypographyChange={setTypography} onPrint={() => handlePrint()} language={language} onLanguageChange={setLanguage} />
       </div>
       <div className="w-1/2 overflow-y-auto bg-gray-100 p-8">
         <ScaledPreview>
-          <CVPreview ref={cvRef} data={data} typography={typography} language={language} colors={colors} />
+          <CVPreview ref={cvRef} data={data} typography={typography} language={language} />
         </ScaledPreview>
       </div>
 
