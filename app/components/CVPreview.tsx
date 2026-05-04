@@ -106,7 +106,13 @@ const CVPreview = forwardRef<HTMLDivElement, Props>(function CVPreview(
             {contactItems.map((item, i) => (
               <span key={i}>
                 {i > 0 && " | "}
-                {item.label}
+                {item.href ? (
+                  <a href={item.href} style={{ color: "inherit", textDecoration: "none" }}>
+                    {item.label}
+                  </a>
+                ) : (
+                  item.label
+                )}
               </span>
             ))}
           </p>
