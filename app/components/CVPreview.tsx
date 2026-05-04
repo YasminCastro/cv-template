@@ -22,7 +22,11 @@ function buildContactItems(data: CVData): ContactItem[] {
   if (data.location) items.push({ label: data.location });
   if (data.email)
     items.push({ label: data.email, href: `mailto:${data.email}` });
-  if (data.phone) items.push({ label: data.phone, href: `tel:${data.phone.replace(/\D/g, '')}` });
+  if (data.phone) {
+    const digits = data.phone.replace(/\D/g, '');
+    const e164 = digits.startsWith('55') ? `+${digits}` : `+55${digits}`;
+    items.push({ label: data.phone, href: `tel:${e164}` });
+  }
   if (data.website) {
     const href = data.website.startsWith("http")
       ? data.website
