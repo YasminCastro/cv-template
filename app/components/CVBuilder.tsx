@@ -168,6 +168,17 @@ export default function CVBuilder() {
     }
   }
   const cvRef = useRef<HTMLDivElement>(null)
+  const [overflowing, setOverflowing] = useState(false)
+
+  useEffect(() => {
+    const el = cvRef.current
+    if (!el) return
+    const ro = new ResizeObserver(() => {
+      setOverflowing(el.scrollHeight > 1056)
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
 
   const origin = useMemo(() => typeof window !== 'undefined' ? window.location.origin : '', [])
 
@@ -206,10 +217,12 @@ export default function CVBuilder() {
         margin: 0;
       }
       @media print {
-        body { margin: 0; padding: 0; }
+        html, body { margin: 0; padding: 0; height: 279mm; overflow: hidden; }
         .cv-content {
           max-width: 100% !important;
           min-height: unset !important;
+          max-height: 279mm !important;
+          overflow: hidden !important;
           padding: 0.8cm 18mm 15mm !important;
           box-shadow: none !important;
         }
@@ -223,6 +236,12 @@ export default function CVBuilder() {
         <CVForm data={data} onChange={handleChange} typography={typography} onTypographyChange={setTypography} onPrint={() => handlePrint()} language={language} onLanguageChange={setLanguage} />
       </div>
       <div className="w-1/2 overflow-y-auto bg-gray-100 p-8">
+        {overflowing && (
+          <div className="mb-4 flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-800">
+            <span>⚠️</span>
+            <span>Conteúdo ultrapassa 1 página — o PDF será cortado.</span>
+          </div>
+        )}
         <ScaledPreview>
           <CVPreview ref={cvRef} data={data} typography={typography} language={language} />
         </ScaledPreview>
