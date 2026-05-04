@@ -1,11 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { CVData, Experience, Education, Project, SkillGroup } from "./CVBuilder";
+import {
+  CVData,
+  Experience,
+  Education,
+  Project,
+  SkillGroup,
+} from "./CVBuilder";
 import { CVTypography } from "./cvTypography";
 import { Language } from "./cvLocale";
 import CVFormHeader from "./CVFormHeader";
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+import {
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+} from "@/components/ui/collapsible";
 import { GripVertical, ArrowRight, ArrowDown } from "lucide-react";
 import {
   DndContext,
@@ -41,30 +51,35 @@ function FormSection({
   title,
   action,
   children,
+  muted = false,
 }: {
   title: string;
   action?: React.ReactNode;
   children: React.ReactNode;
+  muted?: boolean;
 }) {
   const [open, setOpen] = useState(true);
 
   return (
-    <Collapsible open={open} onOpenChange={setOpen} className="space-y-3">
+    <Collapsible
+      open={open}
+      onOpenChange={setOpen}
+      className={`space-y-3 rounded-lg border border-gray-200 px-4 py-3 ${muted ? "bg-gray-50" : ""}`}
+    >
       <div className="flex items-center justify-between">
         <CollapsibleTrigger className="flex items-center gap-2">
-          {open
-            ? <ArrowDown size={13} className="text-gray-400" />
-            : <ArrowRight size={13} className="text-gray-400" />
-          }
+          {open ? (
+            <ArrowDown size={13} className="text-gray-400" />
+          ) : (
+            <ArrowRight size={13} className="text-gray-400" />
+          )}
           <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-700">
             {title}
           </h2>
         </CollapsibleTrigger>
         {action}
       </div>
-      <CollapsibleContent className="space-y-3">
-        {children}
-      </CollapsibleContent>
+      <CollapsibleContent className="space-y-3">{children}</CollapsibleContent>
     </Collapsible>
   );
 }
@@ -92,23 +107,45 @@ function SortableExperienceItem({
   onUpdate: (id: string, field: keyof Experience, value: unknown) => void;
   onRemove: (id: string) => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: exp.id });
-  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: exp.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
 
   return (
-    <div ref={setNodeRef} style={style} className="rounded-md border border-gray-200 p-4 space-y-3">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="rounded-md border border-gray-200 p-4 space-y-3"
+    >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <DragHandle {...attributes} {...listeners} />
-          <span className="text-xs font-medium text-gray-500">Experiência {index + 1}</span>
+          <span className="text-xs font-medium text-gray-500">
+            Experiência {index + 1}
+          </span>
         </div>
-        <button onClick={() => onRemove(exp.id)} className="text-xs text-red-400 hover:text-red-600">
+        <button
+          onClick={() => onRemove(exp.id)}
+          className="text-xs text-red-400 hover:text-red-600"
+        >
           Remover
         </button>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-medium text-gray-800 mb-1">Cargo</label>
+          <label className="block text-xs font-medium text-gray-800 mb-1">
+            Cargo
+          </label>
           <input
             type="text"
             value={exp.position}
@@ -118,7 +155,9 @@ function SortableExperienceItem({
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-800 mb-1">Empresa</label>
+          <label className="block text-xs font-medium text-gray-800 mb-1">
+            Empresa
+          </label>
           <input
             type="text"
             value={exp.company}
@@ -128,7 +167,9 @@ function SortableExperienceItem({
           />
         </div>
         <div className="col-span-2">
-          <label className="block text-xs font-medium text-gray-800 mb-1">Localização</label>
+          <label className="block text-xs font-medium text-gray-800 mb-1">
+            Localização
+          </label>
           <input
             type="text"
             value={exp.location}
@@ -138,7 +179,9 @@ function SortableExperienceItem({
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-800 mb-1">Início</label>
+          <label className="block text-xs font-medium text-gray-800 mb-1">
+            Início
+          </label>
           <input
             type="month"
             value={exp.startDate}
@@ -147,7 +190,9 @@ function SortableExperienceItem({
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-800 mb-1">Fim</label>
+          <label className="block text-xs font-medium text-gray-800 mb-1">
+            Fim
+          </label>
           <input
             type="month"
             value={exp.endDate}
@@ -167,7 +212,9 @@ function SortableExperienceItem({
         Emprego atual
       </label>
       <div>
-        <label className="block text-xs font-medium text-gray-800 mb-1">Descrição</label>
+        <label className="block text-xs font-medium text-gray-800 mb-1">
+          Descrição
+        </label>
         <div className="space-y-2">
           {exp.description.map((bullet, bi) => (
             <div key={bi} className="flex items-start gap-2">
@@ -185,7 +232,13 @@ function SortableExperienceItem({
               />
               <button
                 type="button"
-                onClick={() => onUpdate(exp.id, "description", exp.description.filter((_, i) => i !== bi))}
+                onClick={() =>
+                  onUpdate(
+                    exp.id,
+                    "description",
+                    exp.description.filter((_, i) => i !== bi),
+                  )
+                }
                 className="mt-2 text-xs text-red-400 hover:text-red-600"
               >
                 ✕
@@ -194,7 +247,9 @@ function SortableExperienceItem({
           ))}
           <button
             type="button"
-            onClick={() => onUpdate(exp.id, "description", [...exp.description, ""])}
+            onClick={() =>
+              onUpdate(exp.id, "description", [...exp.description, ""])
+            }
             className="text-xs font-medium text-blue-600 hover:text-blue-700"
           >
             + Adicionar bullet
@@ -216,23 +271,45 @@ function SortableEducationItem({
   onUpdate: (id: string, field: keyof Education, value: unknown) => void;
   onRemove: (id: string) => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: edu.id });
-  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: edu.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
 
   return (
-    <div ref={setNodeRef} style={style} className="rounded-md border border-gray-200 p-4 space-y-3">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="rounded-md border border-gray-200 p-4 space-y-3"
+    >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <DragHandle {...attributes} {...listeners} />
-          <span className="text-xs font-medium text-gray-500">Formação {index + 1}</span>
+          <span className="text-xs font-medium text-gray-500">
+            Formação {index + 1}
+          </span>
         </div>
-        <button onClick={() => onRemove(edu.id)} className="text-xs text-red-400 hover:text-red-600">
+        <button
+          onClick={() => onRemove(edu.id)}
+          className="text-xs text-red-400 hover:text-red-600"
+        >
           Remover
         </button>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="col-span-2">
-          <label className="block text-xs font-medium text-gray-800 mb-1">Instituição</label>
+          <label className="block text-xs font-medium text-gray-800 mb-1">
+            Instituição
+          </label>
           <input
             type="text"
             value={edu.institution}
@@ -242,7 +319,9 @@ function SortableEducationItem({
           />
         </div>
         <div className="col-span-2">
-          <label className="block text-xs font-medium text-gray-800 mb-1">Grau e Curso</label>
+          <label className="block text-xs font-medium text-gray-800 mb-1">
+            Grau e Curso
+          </label>
           <input
             type="text"
             value={edu.degree}
@@ -252,7 +331,9 @@ function SortableEducationItem({
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-800 mb-1">Início</label>
+          <label className="block text-xs font-medium text-gray-800 mb-1">
+            Início
+          </label>
           <input
             type="number"
             value={edu.startDate}
@@ -264,7 +345,9 @@ function SortableEducationItem({
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-800 mb-1">Conclusão</label>
+          <label className="block text-xs font-medium text-gray-800 mb-1">
+            Conclusão
+          </label>
           <input
             type="number"
             value={edu.endDate}
@@ -301,23 +384,45 @@ function SortableProjectItem({
   onUpdate: (id: string, field: keyof Project, value: unknown) => void;
   onRemove: (id: string) => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: proj.id });
-  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: proj.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
 
   return (
-    <div ref={setNodeRef} style={style} className="rounded-md border border-gray-200 p-4 space-y-3">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="rounded-md border border-gray-200 p-4 space-y-3"
+    >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <DragHandle {...attributes} {...listeners} />
-          <span className="text-xs font-medium text-gray-500">Projeto {index + 1}</span>
+          <span className="text-xs font-medium text-gray-500">
+            Projeto {index + 1}
+          </span>
         </div>
-        <button onClick={() => onRemove(proj.id)} className="text-xs text-red-400 hover:text-red-600">
+        <button
+          onClick={() => onRemove(proj.id)}
+          className="text-xs text-red-400 hover:text-red-600"
+        >
           Remover
         </button>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="col-span-2">
-          <label className="block text-xs font-medium text-gray-800 mb-1">Função / Papel (opcional)</label>
+          <label className="block text-xs font-medium text-gray-800 mb-1">
+            Função / Papel (opcional)
+          </label>
           <input
             type="text"
             value={proj.role}
@@ -327,7 +432,9 @@ function SortableProjectItem({
           />
         </div>
         <div className="col-span-2">
-          <label className="block text-xs font-medium text-gray-800 mb-1">Nome do projeto / Programa</label>
+          <label className="block text-xs font-medium text-gray-800 mb-1">
+            Nome do projeto / Programa
+          </label>
           <input
             type="text"
             value={proj.name}
@@ -337,7 +444,9 @@ function SortableProjectItem({
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-800 mb-1">Início</label>
+          <label className="block text-xs font-medium text-gray-800 mb-1">
+            Início
+          </label>
           <input
             type="month"
             value={proj.startDate}
@@ -346,7 +455,9 @@ function SortableProjectItem({
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-800 mb-1">Fim</label>
+          <label className="block text-xs font-medium text-gray-800 mb-1">
+            Fim
+          </label>
           <input
             type="month"
             value={proj.endDate}
@@ -366,7 +477,9 @@ function SortableProjectItem({
         Em andamento
       </label>
       <div>
-        <label className="block text-xs font-medium text-gray-800 mb-1">Descrição</label>
+        <label className="block text-xs font-medium text-gray-800 mb-1">
+          Descrição
+        </label>
         <div className="space-y-2">
           {proj.description.map((bullet, bi) => (
             <div key={bi} className="flex items-start gap-2">
@@ -384,7 +497,13 @@ function SortableProjectItem({
               />
               <button
                 type="button"
-                onClick={() => onUpdate(proj.id, "description", proj.description.filter((_, i) => i !== bi))}
+                onClick={() =>
+                  onUpdate(
+                    proj.id,
+                    "description",
+                    proj.description.filter((_, i) => i !== bi),
+                  )
+                }
                 className="mt-2 text-xs text-red-400 hover:text-red-600"
               >
                 ✕
@@ -393,7 +512,9 @@ function SortableProjectItem({
           ))}
           <button
             type="button"
-            onClick={() => onUpdate(proj.id, "description", [...proj.description, ""])}
+            onClick={() =>
+              onUpdate(proj.id, "description", [...proj.description, ""])
+            }
             className="text-xs font-medium text-blue-600 hover:text-blue-700"
           >
             + Adicionar bullet
@@ -415,22 +536,44 @@ function SortableSkillGroupItem({
   onUpdate: (id: string, field: keyof SkillGroup, value: string) => void;
   onRemove: (id: string) => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: sg.id });
-  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: sg.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
 
   return (
-    <div ref={setNodeRef} style={style} className="rounded-md border border-gray-200 p-4 space-y-3">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="rounded-md border border-gray-200 p-4 space-y-3"
+    >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <DragHandle {...attributes} {...listeners} />
-          <span className="text-xs font-medium text-gray-500">Grupo {index + 1}</span>
+          <span className="text-xs font-medium text-gray-500">
+            Grupo {index + 1}
+          </span>
         </div>
-        <button onClick={() => onRemove(sg.id)} className="text-xs text-red-400 hover:text-red-600">
+        <button
+          onClick={() => onRemove(sg.id)}
+          className="text-xs text-red-400 hover:text-red-600"
+        >
           Remover
         </button>
       </div>
       <div>
-        <label className="block text-xs font-medium text-gray-800 mb-1">Título</label>
+        <label className="block text-xs font-medium text-gray-800 mb-1">
+          Título
+        </label>
         <input
           type="text"
           value={sg.title}
@@ -440,7 +583,9 @@ function SortableSkillGroupItem({
         />
       </div>
       <div>
-        <label className="block text-xs font-medium text-gray-800 mb-1">Habilidades</label>
+        <label className="block text-xs font-medium text-gray-800 mb-1">
+          Habilidades
+        </label>
         <input
           type="text"
           value={sg.text}
@@ -453,8 +598,15 @@ function SortableSkillGroupItem({
   );
 }
 
-export default function CVForm({ data, onChange, typography, onTypographyChange, onPrint, language, onLanguageChange }: Props) {
-
+export default function CVForm({
+  data,
+  onChange,
+  typography,
+  onTypographyChange,
+  onPrint,
+  language,
+  onLanguageChange,
+}: Props) {
   const sensors = useSensors(useSensor(PointerSensor));
 
   function set(field: keyof CVData, value: unknown) {
@@ -475,12 +627,22 @@ export default function CVForm({ data, onChange, typography, onTypographyChange,
     set("experience", [...data.experience, entry]);
   }
 
-  function updateExperience(id: string, field: keyof Experience, value: unknown) {
-    set("experience", data.experience.map((e) => (e.id === id ? { ...e, [field]: value } : e)));
+  function updateExperience(
+    id: string,
+    field: keyof Experience,
+    value: unknown,
+  ) {
+    set(
+      "experience",
+      data.experience.map((e) => (e.id === id ? { ...e, [field]: value } : e)),
+    );
   }
 
   function removeExperience(id: string) {
-    set("experience", data.experience.filter((e) => e.id !== id));
+    set(
+      "experience",
+      data.experience.filter((e) => e.id !== id),
+    );
   }
 
   function handleExperienceDragEnd(event: DragEndEvent) {
@@ -504,11 +666,17 @@ export default function CVForm({ data, onChange, typography, onTypographyChange,
   }
 
   function updateEducation(id: string, field: keyof Education, value: unknown) {
-    set("education", data.education.map((e) => (e.id === id ? { ...e, [field]: value } : e)));
+    set(
+      "education",
+      data.education.map((e) => (e.id === id ? { ...e, [field]: value } : e)),
+    );
   }
 
   function removeEducation(id: string) {
-    set("education", data.education.filter((e) => e.id !== id));
+    set(
+      "education",
+      data.education.filter((e) => e.id !== id),
+    );
   }
 
   function handleEducationDragEnd(event: DragEndEvent) {
@@ -533,11 +701,17 @@ export default function CVForm({ data, onChange, typography, onTypographyChange,
   }
 
   function updateProject(id: string, field: keyof Project, value: unknown) {
-    set("projects", data.projects.map((p) => (p.id === id ? { ...p, [field]: value } : p)));
+    set(
+      "projects",
+      data.projects.map((p) => (p.id === id ? { ...p, [field]: value } : p)),
+    );
   }
 
   function removeProject(id: string) {
-    set("projects", data.projects.filter((p) => p.id !== id));
+    set(
+      "projects",
+      data.projects.filter((p) => p.id !== id),
+    );
   }
 
   function handleProjectDragEnd(event: DragEndEvent) {
@@ -553,12 +727,22 @@ export default function CVForm({ data, onChange, typography, onTypographyChange,
     set("skills", [...data.skills, entry]);
   }
 
-  function updateSkillGroup(id: string, field: keyof SkillGroup, value: string) {
-    set("skills", data.skills.map((s) => (s.id === id ? { ...s, [field]: value } : s)));
+  function updateSkillGroup(
+    id: string,
+    field: keyof SkillGroup,
+    value: string,
+  ) {
+    set(
+      "skills",
+      data.skills.map((s) => (s.id === id ? { ...s, [field]: value } : s)),
+    );
   }
 
   function removeSkillGroup(id: string) {
-    set("skills", data.skills.filter((s) => s.id !== id));
+    set(
+      "skills",
+      data.skills.filter((s) => s.id !== id),
+    );
   }
 
   function handleSkillDragEnd(event: DragEndEvent) {
@@ -583,7 +767,9 @@ export default function CVForm({ data, onChange, typography, onTypographyChange,
       <FormSection title="Dados Pessoais">
         <div className="grid grid-cols-2 gap-3">
           <div className="col-span-2">
-            <label className="block text-xs font-medium text-gray-800 mb-1">Nome completo</label>
+            <label className="block text-xs font-medium text-gray-800 mb-1">
+              Nome completo
+            </label>
             <input
               type="text"
               value={data.name}
@@ -593,7 +779,9 @@ export default function CVForm({ data, onChange, typography, onTypographyChange,
             />
           </div>
           <div className="col-span-2">
-            <label className="block text-xs font-medium text-gray-800 mb-1">Cargo / Título profissional</label>
+            <label className="block text-xs font-medium text-gray-800 mb-1">
+              Cargo / Título profissional
+            </label>
             <input
               type="text"
               value={data.title}
@@ -603,7 +791,9 @@ export default function CVForm({ data, onChange, typography, onTypographyChange,
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-800 mb-1">Localização</label>
+            <label className="block text-xs font-medium text-gray-800 mb-1">
+              Localização
+            </label>
             <input
               type="text"
               value={data.location}
@@ -613,7 +803,9 @@ export default function CVForm({ data, onChange, typography, onTypographyChange,
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-800 mb-1">E-mail</label>
+            <label className="block text-xs font-medium text-gray-800 mb-1">
+              E-mail
+            </label>
             <input
               type="email"
               value={data.email}
@@ -623,7 +815,9 @@ export default function CVForm({ data, onChange, typography, onTypographyChange,
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-800 mb-1">Telefone</label>
+            <label className="block text-xs font-medium text-gray-800 mb-1">
+              Telefone
+            </label>
             <input
               type="text"
               value={data.phone}
@@ -633,7 +827,9 @@ export default function CVForm({ data, onChange, typography, onTypographyChange,
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-800 mb-1">Website / Portfólio</label>
+            <label className="block text-xs font-medium text-gray-800 mb-1">
+              Website / Portfólio
+            </label>
             <input
               type="text"
               value={data.website}
@@ -643,7 +839,9 @@ export default function CVForm({ data, onChange, typography, onTypographyChange,
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-800 mb-1">LinkedIn</label>
+            <label className="block text-xs font-medium text-gray-800 mb-1">
+              LinkedIn
+            </label>
             <input
               type="text"
               value={data.linkedin}
@@ -656,7 +854,7 @@ export default function CVForm({ data, onChange, typography, onTypographyChange,
       </FormSection>
 
       {/* Resumo */}
-      <FormSection title="Resumo Profissional">
+      <FormSection title="Resumo Profissional" muted>
         <textarea
           value={data.summary}
           onChange={(e) => set("summary", e.target.value)}
@@ -670,13 +868,23 @@ export default function CVForm({ data, onChange, typography, onTypographyChange,
       <FormSection
         title="Experiência"
         action={
-          <button onClick={addExperience} className="text-xs font-medium text-blue-600 hover:text-blue-700">
+          <button
+            onClick={addExperience}
+            className="text-xs font-medium text-blue-600 hover:text-blue-700"
+          >
             + Adicionar
           </button>
         }
       >
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleExperienceDragEnd}>
-          <SortableContext items={data.experience.map((e) => e.id)} strategy={verticalListSortingStrategy}>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleExperienceDragEnd}
+        >
+          <SortableContext
+            items={data.experience.map((e) => e.id)}
+            strategy={verticalListSortingStrategy}
+          >
             {data.experience.map((exp, i) => (
               <SortableExperienceItem
                 key={exp.id}
@@ -693,14 +901,25 @@ export default function CVForm({ data, onChange, typography, onTypographyChange,
       {/* Formação Acadêmica */}
       <FormSection
         title="Formação Acadêmica"
+        muted
         action={
-          <button onClick={addEducation} className="text-xs font-medium text-blue-600 hover:text-blue-700">
+          <button
+            onClick={addEducation}
+            className="text-xs font-medium text-blue-600 hover:text-blue-700"
+          >
             + Adicionar
           </button>
         }
       >
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleEducationDragEnd}>
-          <SortableContext items={data.education.map((e) => e.id)} strategy={verticalListSortingStrategy}>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleEducationDragEnd}
+        >
+          <SortableContext
+            items={data.education.map((e) => e.id)}
+            strategy={verticalListSortingStrategy}
+          >
             {data.education.map((edu, i) => (
               <SortableEducationItem
                 key={edu.id}
@@ -718,13 +937,23 @@ export default function CVForm({ data, onChange, typography, onTypographyChange,
       <FormSection
         title="Projetos e Experiências Relevantes"
         action={
-          <button onClick={addProject} className="text-xs font-medium text-blue-600 hover:text-blue-700">
+          <button
+            onClick={addProject}
+            className="text-xs font-medium text-blue-600 hover:text-blue-700"
+          >
             + Adicionar
           </button>
         }
       >
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleProjectDragEnd}>
-          <SortableContext items={data.projects.map((p) => p.id)} strategy={verticalListSortingStrategy}>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleProjectDragEnd}
+        >
+          <SortableContext
+            items={data.projects.map((p) => p.id)}
+            strategy={verticalListSortingStrategy}
+          >
             {data.projects.map((proj, i) => (
               <SortableProjectItem
                 key={proj.id}
@@ -741,15 +970,21 @@ export default function CVForm({ data, onChange, typography, onTypographyChange,
       {/* Habilidades */}
       <FormSection
         title="Habilidades"
+        muted
         action={
-          <button onClick={addSkillGroup} className="text-xs font-medium text-blue-600 hover:text-blue-700">
+          <button
+            onClick={addSkillGroup}
+            className="text-xs font-medium text-blue-600 hover:text-blue-700"
+          >
             + Adicionar
           </button>
         }
       >
         <div className="space-y-3">
           <div>
-            <label className="block text-xs font-medium text-gray-800 mb-1">Idiomas</label>
+            <label className="block text-xs font-medium text-gray-800 mb-1">
+              Idiomas
+            </label>
             <input
               type="text"
               value={data.languages}
@@ -758,8 +993,15 @@ export default function CVForm({ data, onChange, typography, onTypographyChange,
               className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSkillDragEnd}>
-            <SortableContext items={data.skills.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleSkillDragEnd}
+          >
+            <SortableContext
+              items={data.skills.map((s) => s.id)}
+              strategy={verticalListSortingStrategy}
+            >
               {data.skills.map((sg, i) => (
                 <SortableSkillGroupItem
                   key={sg.id}
