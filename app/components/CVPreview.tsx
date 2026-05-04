@@ -212,7 +212,10 @@ const CVPreview = forwardRef<HTMLDivElement, Props>(function CVPreview(
       {data.education.length > 0 && (
         <Section titulosSecao={t.titulosSecao} title={locale.sections.education}>
           {data.education.map((edu) => {
-            const years = [edu.startDate, edu.endDate]
+            const years = [
+              edu.startDate,
+              edu.current ? locale.present : edu.endDate,
+            ]
               .filter(Boolean)
               .join(" - ");
             return (
