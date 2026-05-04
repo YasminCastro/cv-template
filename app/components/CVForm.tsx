@@ -272,10 +272,20 @@ function SortableEducationItem({
             placeholder="2024"
             min="1950"
             max="2099"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={edu.current}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400"
           />
         </div>
       </div>
+      <label className="flex items-center gap-2 text-xs text-gray-800 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={edu.current}
+          onChange={(e) => onUpdate(edu.id, "current", e.target.checked)}
+          className="rounded"
+        />
+        Cursando atualmente
+      </label>
     </div>
   );
 }
@@ -488,6 +498,7 @@ export default function CVForm({ data, onChange, typography, onTypographyChange,
       degree: "",
       startDate: "",
       endDate: "",
+      current: false,
     };
     set("education", [...data.education, entry]);
   }

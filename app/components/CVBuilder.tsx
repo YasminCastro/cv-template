@@ -25,6 +25,7 @@ export type Education = {
   degree: string
   startDate: string
   endDate: string
+  current: boolean
 }
 
 export type Project = {
