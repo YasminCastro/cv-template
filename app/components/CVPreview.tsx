@@ -22,7 +22,7 @@ function buildContactItems(data: CVData): ContactItem[] {
   if (data.location) items.push({ label: data.location });
   if (data.email)
     items.push({ label: data.email, href: `mailto:${data.email}` });
-  if (data.phone) items.push({ label: data.phone, href: `tel:${data.phone.replace(/\s/g, '')}` });
+  if (data.phone) items.push({ label: data.phone, href: `tel:${data.phone.replace(/\D/g, '')}` });
   if (data.website) {
     const href = data.website.startsWith("http")
       ? data.website
@@ -107,7 +107,12 @@ const CVPreview = forwardRef<HTMLDivElement, Props>(function CVPreview(
               <span key={i}>
                 {i > 0 && " | "}
                 {item.href ? (
-                  <a href={item.href} style={{ color: "inherit", textDecoration: "none" }}>
+                  <a
+                    href={item.href}
+                    target={item.href.startsWith("http") ? "_blank" : undefined}
+                    rel={item.href.startsWith("http") ? "noreferrer" : undefined}
+                    style={{ color: "inherit", textDecoration: "none", cursor: "pointer" }}
+                  >
                     {item.label}
                   </a>
                 ) : (
