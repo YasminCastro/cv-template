@@ -5,6 +5,22 @@ import { CVTypography } from "./cvTypography";
 import { Language } from "./cvLocale";
 import CVFormHeader from "./CVFormHeader";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+import { GripVertical } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 type Props = {
   data: CVData;
@@ -60,7 +76,383 @@ function FormSection({
   );
 }
 
+function DragHandle(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button
+      {...props}
+      className="cursor-grab text-gray-300 hover:text-gray-500 active:cursor-grabbing touch-none"
+      title="Arrastar para reordenar"
+    >
+      <GripVertical size={14} />
+    </button>
+  );
+}
+
+function SortableExperienceItem({
+  exp,
+  index,
+  onUpdate,
+  onRemove,
+}: {
+  exp: Experience;
+  index: number;
+  onUpdate: (id: string, field: keyof Experience, value: unknown) => void;
+  onRemove: (id: string) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: exp.id });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+
+  return (
+    <div ref={setNodeRef} style={style} className="rounded-md border border-gray-200 p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <DragHandle {...attributes} {...listeners} />
+          <span className="text-xs font-medium text-gray-500">Experiência {index + 1}</span>
+        </div>
+        <button onClick={() => onRemove(exp.id)} className="text-xs text-red-400 hover:text-red-600">
+          Remover
+        </button>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-medium text-gray-800 mb-1">Cargo</label>
+          <input
+            type="text"
+            value={exp.position}
+            onChange={(e) => onUpdate(exp.id, "position", e.target.value)}
+            placeholder="Desenvolvedora Full-Stack"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-800 mb-1">Empresa</label>
+          <input
+            type="text"
+            value={exp.company}
+            onChange={(e) => onUpdate(exp.id, "company", e.target.value)}
+            placeholder="SVA Tech"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div className="col-span-2">
+          <label className="block text-xs font-medium text-gray-800 mb-1">Localização</label>
+          <input
+            type="text"
+            value={exp.location}
+            onChange={(e) => onUpdate(exp.id, "location", e.target.value)}
+            placeholder="Belo Horizonte, MG"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-800 mb-1">Início</label>
+          <input
+            type="month"
+            value={exp.startDate}
+            onChange={(e) => onUpdate(exp.id, "startDate", e.target.value)}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-800 mb-1">Fim</label>
+          <input
+            type="month"
+            value={exp.endDate}
+            onChange={(e) => onUpdate(exp.id, "endDate", e.target.value)}
+            disabled={exp.current}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400"
+          />
+        </div>
+      </div>
+      <label className="flex items-center gap-2 text-xs text-gray-800 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={exp.current}
+          onChange={(e) => onUpdate(exp.id, "current", e.target.checked)}
+          className="rounded"
+        />
+        Emprego atual
+      </label>
+      <div>
+        <label className="block text-xs font-medium text-gray-800 mb-1">Descrição</label>
+        <div className="space-y-2">
+          {exp.description.map((bullet, bi) => (
+            <div key={bi} className="flex items-start gap-2">
+              <span className="mt-2 text-gray-400 text-xs select-none">•</span>
+              <input
+                type="text"
+                value={bullet}
+                onChange={(e) => {
+                  const updated = [...exp.description];
+                  updated[bi] = e.target.value;
+                  onUpdate(exp.id, "description", updated);
+                }}
+                placeholder="Descreva uma atividade ou conquista..."
+                className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                type="button"
+                onClick={() => onUpdate(exp.id, "description", exp.description.filter((_, i) => i !== bi))}
+                className="mt-2 text-xs text-red-400 hover:text-red-600"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => onUpdate(exp.id, "description", [...exp.description, ""])}
+            className="text-xs font-medium text-blue-600 hover:text-blue-700"
+          >
+            + Adicionar bullet
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SortableEducationItem({
+  edu,
+  index,
+  onUpdate,
+  onRemove,
+}: {
+  edu: Education;
+  index: number;
+  onUpdate: (id: string, field: keyof Education, value: unknown) => void;
+  onRemove: (id: string) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: edu.id });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+
+  return (
+    <div ref={setNodeRef} style={style} className="rounded-md border border-gray-200 p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <DragHandle {...attributes} {...listeners} />
+          <span className="text-xs font-medium text-gray-500">Formação {index + 1}</span>
+        </div>
+        <button onClick={() => onRemove(edu.id)} className="text-xs text-red-400 hover:text-red-600">
+          Remover
+        </button>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="col-span-2">
+          <label className="block text-xs font-medium text-gray-800 mb-1">Instituição</label>
+          <input
+            type="text"
+            value={edu.institution}
+            onChange={(e) => onUpdate(edu.id, "institution", e.target.value)}
+            placeholder="Instituto Federal de Goiás"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div className="col-span-2">
+          <label className="block text-xs font-medium text-gray-800 mb-1">Grau e Curso</label>
+          <input
+            type="text"
+            value={edu.degree}
+            onChange={(e) => onUpdate(edu.id, "degree", e.target.value)}
+            placeholder="Bacharelado em Sistemas de Informação"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-800 mb-1">Início</label>
+          <input
+            type="number"
+            value={edu.startDate}
+            onChange={(e) => onUpdate(edu.id, "startDate", e.target.value)}
+            placeholder="2020"
+            min="1950"
+            max="2099"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-800 mb-1">Conclusão</label>
+          <input
+            type="number"
+            value={edu.endDate}
+            onChange={(e) => onUpdate(edu.id, "endDate", e.target.value)}
+            placeholder="2024"
+            min="1950"
+            max="2099"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SortableProjectItem({
+  proj,
+  index,
+  onUpdate,
+  onRemove,
+}: {
+  proj: Project;
+  index: number;
+  onUpdate: (id: string, field: keyof Project, value: unknown) => void;
+  onRemove: (id: string) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: proj.id });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+
+  return (
+    <div ref={setNodeRef} style={style} className="rounded-md border border-gray-200 p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <DragHandle {...attributes} {...listeners} />
+          <span className="text-xs font-medium text-gray-500">Projeto {index + 1}</span>
+        </div>
+        <button onClick={() => onRemove(proj.id)} className="text-xs text-red-400 hover:text-red-600">
+          Remover
+        </button>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="col-span-2">
+          <label className="block text-xs font-medium text-gray-800 mb-1">Função / Papel (opcional)</label>
+          <input
+            type="text"
+            value={proj.role}
+            onChange={(e) => onUpdate(proj.id, "role", e.target.value)}
+            placeholder="Desenvolvedora Front-End"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div className="col-span-2">
+          <label className="block text-xs font-medium text-gray-800 mb-1">Nome do projeto / Programa</label>
+          <input
+            type="text"
+            value={proj.name}
+            onChange={(e) => onUpdate(proj.id, "name", e.target.value)}
+            placeholder="Residência TIC - Programa BRISA e UFG"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-800 mb-1">Início</label>
+          <input
+            type="month"
+            value={proj.startDate}
+            onChange={(e) => onUpdate(proj.id, "startDate", e.target.value)}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-800 mb-1">Fim</label>
+          <input
+            type="month"
+            value={proj.endDate}
+            onChange={(e) => onUpdate(proj.id, "endDate", e.target.value)}
+            disabled={proj.current}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400"
+          />
+        </div>
+      </div>
+      <label className="flex items-center gap-2 text-xs text-gray-800 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={proj.current}
+          onChange={(e) => onUpdate(proj.id, "current", e.target.checked)}
+          className="rounded"
+        />
+        Em andamento
+      </label>
+      <div>
+        <label className="block text-xs font-medium text-gray-800 mb-1">Descrição</label>
+        <div className="space-y-2">
+          {proj.description.map((bullet, bi) => (
+            <div key={bi} className="flex items-start gap-2">
+              <span className="mt-2 text-gray-400 text-xs select-none">•</span>
+              <input
+                type="text"
+                value={bullet}
+                onChange={(e) => {
+                  const updated = [...proj.description];
+                  updated[bi] = e.target.value;
+                  onUpdate(proj.id, "description", updated);
+                }}
+                placeholder="Descreva uma atividade ou conquista..."
+                className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                type="button"
+                onClick={() => onUpdate(proj.id, "description", proj.description.filter((_, i) => i !== bi))}
+                className="mt-2 text-xs text-red-400 hover:text-red-600"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => onUpdate(proj.id, "description", [...proj.description, ""])}
+            className="text-xs font-medium text-blue-600 hover:text-blue-700"
+          >
+            + Adicionar bullet
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SortableSkillGroupItem({
+  sg,
+  index,
+  onUpdate,
+  onRemove,
+}: {
+  sg: SkillGroup;
+  index: number;
+  onUpdate: (id: string, field: keyof SkillGroup, value: string) => void;
+  onRemove: (id: string) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: sg.id });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+
+  return (
+    <div ref={setNodeRef} style={style} className="rounded-md border border-gray-200 p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <DragHandle {...attributes} {...listeners} />
+          <span className="text-xs font-medium text-gray-500">Grupo {index + 1}</span>
+        </div>
+        <button onClick={() => onRemove(sg.id)} className="text-xs text-red-400 hover:text-red-600">
+          Remover
+        </button>
+      </div>
+      <div>
+        <label className="block text-xs font-medium text-gray-800 mb-1">Título</label>
+        <input
+          type="text"
+          value={sg.title}
+          onChange={(e) => onUpdate(sg.id, "title", e.target.value)}
+          placeholder="Ex: Linguagens de programação"
+          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      <div>
+        <label className="block text-xs font-medium text-gray-800 mb-1">Habilidades</label>
+        <input
+          type="text"
+          value={sg.text}
+          onChange={(e) => onUpdate(sg.id, "text", e.target.value)}
+          placeholder="Ex: JavaScript, TypeScript, Python"
+          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function CVForm({ data, onChange, typography, onTypographyChange, onPrint, language, onLanguageChange }: Props) {
+
+  const sensors = useSensors(useSensor(PointerSensor));
 
   function set(field: keyof CVData, value: unknown) {
     onChange({ ...data, [field]: value });
@@ -88,6 +480,14 @@ export default function CVForm({ data, onChange, typography, onTypographyChange,
     set("experience", data.experience.filter((e) => e.id !== id));
   }
 
+  function handleExperienceDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = data.experience.findIndex((e) => e.id === active.id);
+    const newIndex = data.experience.findIndex((e) => e.id === over.id);
+    set("experience", arrayMove(data.experience, oldIndex, newIndex));
+  }
+
   function addEducation() {
     const entry: Education = {
       id: randomId(),
@@ -105,6 +505,14 @@ export default function CVForm({ data, onChange, typography, onTypographyChange,
 
   function removeEducation(id: string) {
     set("education", data.education.filter((e) => e.id !== id));
+  }
+
+  function handleEducationDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = data.education.findIndex((e) => e.id === active.id);
+    const newIndex = data.education.findIndex((e) => e.id === over.id);
+    set("education", arrayMove(data.education, oldIndex, newIndex));
   }
 
   function addProject() {
@@ -128,6 +536,14 @@ export default function CVForm({ data, onChange, typography, onTypographyChange,
     set("projects", data.projects.filter((p) => p.id !== id));
   }
 
+  function handleProjectDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = data.projects.findIndex((e) => e.id === active.id);
+    const newIndex = data.projects.findIndex((e) => e.id === over.id);
+    set("projects", arrayMove(data.projects, oldIndex, newIndex));
+  }
+
   function addSkillGroup() {
     const entry: SkillGroup = { id: randomId(), title: "", text: "" };
     set("skills", [...data.skills, entry]);
@@ -139,6 +555,14 @@ export default function CVForm({ data, onChange, typography, onTypographyChange,
 
   function removeSkillGroup(id: string) {
     set("skills", data.skills.filter((s) => s.id !== id));
+  }
+
+  function handleSkillDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = data.skills.findIndex((e) => e.id === active.id);
+    const newIndex = data.skills.findIndex((e) => e.id === over.id);
+    set("skills", arrayMove(data.skills, oldIndex, newIndex));
   }
 
   return (
@@ -247,111 +671,19 @@ export default function CVForm({ data, onChange, typography, onTypographyChange,
           </button>
         }
       >
-        {data.experience.map((exp, i) => (
-          <div key={exp.id} className="rounded-md border border-gray-200 p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-gray-500">Experiência {i + 1}</span>
-              <button onClick={() => removeExperience(exp.id)} className="text-xs text-red-400 hover:text-red-600">
-                Remover
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-800 mb-1">Cargo</label>
-                <input
-                  type="text"
-                  value={exp.position}
-                  onChange={(e) => updateExperience(exp.id, "position", e.target.value)}
-                  placeholder="Desenvolvedora Full-Stack"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-800 mb-1">Empresa</label>
-                <input
-                  type="text"
-                  value={exp.company}
-                  onChange={(e) => updateExperience(exp.id, "company", e.target.value)}
-                  placeholder="SVA Tech"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div className="col-span-2">
-                <label className="block text-xs font-medium text-gray-800 mb-1">Localização</label>
-                <input
-                  type="text"
-                  value={exp.location}
-                  onChange={(e) => updateExperience(exp.id, "location", e.target.value)}
-                  placeholder="Belo Horizonte, MG"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-800 mb-1">Início</label>
-                <input
-                  type="month"
-                  value={exp.startDate}
-                  onChange={(e) => updateExperience(exp.id, "startDate", e.target.value)}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-800 mb-1">Fim</label>
-                <input
-                  type="month"
-                  value={exp.endDate}
-                  onChange={(e) => updateExperience(exp.id, "endDate", e.target.value)}
-                  disabled={exp.current}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400"
-                />
-              </div>
-            </div>
-            <label className="flex items-center gap-2 text-xs text-gray-800 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={exp.current}
-                onChange={(e) => updateExperience(exp.id, "current", e.target.checked)}
-                className="rounded"
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleExperienceDragEnd}>
+          <SortableContext items={data.experience.map((e) => e.id)} strategy={verticalListSortingStrategy}>
+            {data.experience.map((exp, i) => (
+              <SortableExperienceItem
+                key={exp.id}
+                exp={exp}
+                index={i}
+                onUpdate={updateExperience}
+                onRemove={removeExperience}
               />
-              Emprego atual
-            </label>
-            <div>
-              <label className="block text-xs font-medium text-gray-800 mb-1">Descrição</label>
-              <div className="space-y-2">
-                {exp.description.map((bullet, bi) => (
-                  <div key={bi} className="flex items-start gap-2">
-                    <span className="mt-2 text-gray-400 text-xs select-none">•</span>
-                    <input
-                      type="text"
-                      value={bullet}
-                      onChange={(e) => {
-                        const updated = [...exp.description];
-                        updated[bi] = e.target.value;
-                        updateExperience(exp.id, "description", updated);
-                      }}
-                      placeholder="Descreva uma atividade ou conquista..."
-                      className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => updateExperience(exp.id, "description", exp.description.filter((_, i) => i !== bi))}
-                      className="mt-2 text-xs text-red-400 hover:text-red-600"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => updateExperience(exp.id, "description", [...exp.description, ""])}
-                  className="text-xs font-medium text-blue-600 hover:text-blue-700"
-                >
-                  + Adicionar bullet
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
+            ))}
+          </SortableContext>
+        </DndContext>
       </FormSection>
 
       {/* Formação Acadêmica */}
@@ -363,62 +695,19 @@ export default function CVForm({ data, onChange, typography, onTypographyChange,
           </button>
         }
       >
-        {data.education.map((edu, i) => (
-          <div key={edu.id} className="rounded-md border border-gray-200 p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-gray-500">Formação {i + 1}</span>
-              <button onClick={() => removeEducation(edu.id)} className="text-xs text-red-400 hover:text-red-600">
-                Remover
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2">
-                <label className="block text-xs font-medium text-gray-800 mb-1">Instituição</label>
-                <input
-                  type="text"
-                  value={edu.institution}
-                  onChange={(e) => updateEducation(edu.id, "institution", e.target.value)}
-                  placeholder="Instituto Federal de Goiás"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div className="col-span-2">
-                <label className="block text-xs font-medium text-gray-800 mb-1">Grau e Curso</label>
-                <input
-                  type="text"
-                  value={edu.degree}
-                  onChange={(e) => updateEducation(edu.id, "degree", e.target.value)}
-                  placeholder="Bacharelado em Sistemas de Informação"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-800 mb-1">Início</label>
-                <input
-                  type="number"
-                  value={edu.startDate}
-                  onChange={(e) => updateEducation(edu.id, "startDate", e.target.value)}
-                  placeholder="2020"
-                  min="1950"
-                  max="2099"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-800 mb-1">Conclusão</label>
-                <input
-                  type="number"
-                  value={edu.endDate}
-                  onChange={(e) => updateEducation(edu.id, "endDate", e.target.value)}
-                  placeholder="2024"
-                  min="1950"
-                  max="2099"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-          </div>
-        ))}
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleEducationDragEnd}>
+          <SortableContext items={data.education.map((e) => e.id)} strategy={verticalListSortingStrategy}>
+            {data.education.map((edu, i) => (
+              <SortableEducationItem
+                key={edu.id}
+                edu={edu}
+                index={i}
+                onUpdate={updateEducation}
+                onRemove={removeEducation}
+              />
+            ))}
+          </SortableContext>
+        </DndContext>
       </FormSection>
 
       {/* Projetos */}
@@ -430,101 +719,19 @@ export default function CVForm({ data, onChange, typography, onTypographyChange,
           </button>
         }
       >
-        {data.projects.map((proj, i) => (
-          <div key={proj.id} className="rounded-md border border-gray-200 p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-gray-500">Projeto {i + 1}</span>
-              <button onClick={() => removeProject(proj.id)} className="text-xs text-red-400 hover:text-red-600">
-                Remover
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2">
-                <label className="block text-xs font-medium text-gray-800 mb-1">Função / Papel (opcional)</label>
-                <input
-                  type="text"
-                  value={proj.role}
-                  onChange={(e) => updateProject(proj.id, "role", e.target.value)}
-                  placeholder="Desenvolvedora Front-End"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div className="col-span-2">
-                <label className="block text-xs font-medium text-gray-800 mb-1">Nome do projeto / Programa</label>
-                <input
-                  type="text"
-                  value={proj.name}
-                  onChange={(e) => updateProject(proj.id, "name", e.target.value)}
-                  placeholder="Residência TIC - Programa BRISA e UFG"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-800 mb-1">Início</label>
-                <input
-                  type="month"
-                  value={proj.startDate}
-                  onChange={(e) => updateProject(proj.id, "startDate", e.target.value)}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-800 mb-1">Fim</label>
-                <input
-                  type="month"
-                  value={proj.endDate}
-                  onChange={(e) => updateProject(proj.id, "endDate", e.target.value)}
-                  disabled={proj.current}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400"
-                />
-              </div>
-            </div>
-            <label className="flex items-center gap-2 text-xs text-gray-800 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={proj.current}
-                onChange={(e) => updateProject(proj.id, "current", e.target.checked)}
-                className="rounded"
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleProjectDragEnd}>
+          <SortableContext items={data.projects.map((p) => p.id)} strategy={verticalListSortingStrategy}>
+            {data.projects.map((proj, i) => (
+              <SortableProjectItem
+                key={proj.id}
+                proj={proj}
+                index={i}
+                onUpdate={updateProject}
+                onRemove={removeProject}
               />
-              Em andamento
-            </label>
-            <div>
-              <label className="block text-xs font-medium text-gray-800 mb-1">Descrição</label>
-              <div className="space-y-2">
-                {proj.description.map((bullet, bi) => (
-                  <div key={bi} className="flex items-start gap-2">
-                    <span className="mt-2 text-gray-400 text-xs select-none">•</span>
-                    <input
-                      type="text"
-                      value={bullet}
-                      onChange={(e) => {
-                        const updated = [...proj.description];
-                        updated[bi] = e.target.value;
-                        updateProject(proj.id, "description", updated);
-                      }}
-                      placeholder="Descreva uma atividade ou conquista..."
-                      className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => updateProject(proj.id, "description", proj.description.filter((_, i) => i !== bi))}
-                      className="mt-2 text-xs text-red-400 hover:text-red-600"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => updateProject(proj.id, "description", [...proj.description, ""])}
-                  className="text-xs font-medium text-blue-600 hover:text-blue-700"
-                >
-                  + Adicionar bullet
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
+            ))}
+          </SortableContext>
+        </DndContext>
       </FormSection>
 
       {/* Habilidades */}
@@ -547,36 +754,19 @@ export default function CVForm({ data, onChange, typography, onTypographyChange,
               className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          {data.skills.map((sg, i) => (
-            <div key={sg.id} className="rounded-md border border-gray-200 p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-gray-500">Grupo {i + 1}</span>
-                <button onClick={() => removeSkillGroup(sg.id)} className="text-xs text-red-400 hover:text-red-600">
-                  Remover
-                </button>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-800 mb-1">Título</label>
-                <input
-                  type="text"
-                  value={sg.title}
-                  onChange={(e) => updateSkillGroup(sg.id, "title", e.target.value)}
-                  placeholder="Ex: Linguagens de programação"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSkillDragEnd}>
+            <SortableContext items={data.skills.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+              {data.skills.map((sg, i) => (
+                <SortableSkillGroupItem
+                  key={sg.id}
+                  sg={sg}
+                  index={i}
+                  onUpdate={updateSkillGroup}
+                  onRemove={removeSkillGroup}
                 />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-800 mb-1">Habilidades</label>
-                <input
-                  type="text"
-                  value={sg.text}
-                  onChange={(e) => updateSkillGroup(sg.id, "text", e.target.value)}
-                  placeholder="Ex: JavaScript, TypeScript, Python"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-          ))}
+              ))}
+            </SortableContext>
+          </DndContext>
         </div>
       </FormSection>
     </div>
