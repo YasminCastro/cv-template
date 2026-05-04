@@ -1,11 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { CVData, Experience, Education, Project, SkillGroup } from "./CVBuilder";
 import { CVTypography } from "./cvTypography";
 import { Language } from "./cvLocale";
 import CVFormHeader from "./CVFormHeader";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
-import { GripVertical } from "lucide-react";
+import { GripVertical, ArrowRight, ArrowDown } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -45,24 +46,16 @@ function FormSection({
   action?: React.ReactNode;
   children: React.ReactNode;
 }) {
+  const [open, setOpen] = useState(true);
+
   return (
-    <Collapsible defaultOpen className="space-y-3">
+    <Collapsible open={open} onOpenChange={setOpen} className="space-y-3">
       <div className="flex items-center justify-between">
-        <CollapsibleTrigger className="flex items-center gap-2 group">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="13"
-            height="13"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="text-gray-400 transition-transform duration-200 group-data-open:rotate-90"
-          >
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
+        <CollapsibleTrigger className="flex items-center gap-2">
+          {open
+            ? <ArrowDown size={13} className="text-gray-400" />
+            : <ArrowRight size={13} className="text-gray-400" />
+          }
           <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-700">
             {title}
           </h2>
