@@ -23,7 +23,7 @@ type Locale = {
 
 export const locales: Record<Language, Locale> = {
   pt: {
-    months: ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'],
+    months: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
     present: 'Atual',
     formatMonth: (month, year) => `${month} ${year}`,
     sections: {
@@ -51,7 +51,7 @@ export const locales: Record<Language, Locale> = {
     },
   },
   es: {
-    months: ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'],
+    months: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
     present: 'actualidad',
     formatMonth: (month, year) => `${month} ${year}`,
     sections: {

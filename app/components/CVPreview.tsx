@@ -106,18 +106,7 @@ const CVPreview = forwardRef<HTMLDivElement, Props>(function CVPreview(
             {contactItems.map((item, i) => (
               <span key={i}>
                 {i > 0 && " | "}
-                {item.href ? (
-                  <a
-                    href={item.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ textDecoration: "none" }}
-                  >
-                    {item.label}
-                  </a>
-                ) : (
-                  item.label
-                )}
+                {item.label}
               </span>
             ))}
           </p>
@@ -187,7 +176,7 @@ const CVPreview = forwardRef<HTMLDivElement, Props>(function CVPreview(
                         marginLeft: "16px",
                       }}
                     >
-                      {dateRange.charAt(0).toUpperCase() + dateRange.slice(1)}
+                      {dateRange}
                     </span>
                   )}
                 </div>
@@ -299,7 +288,7 @@ const CVPreview = forwardRef<HTMLDivElement, Props>(function CVPreview(
                         marginLeft: "16px",
                       }}
                     >
-                      {dateRange.charAt(0).toUpperCase() + dateRange.slice(1)}
+                      {dateRange}
                     </span>
                   )}
                 </div>
