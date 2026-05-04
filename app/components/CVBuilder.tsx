@@ -127,20 +127,26 @@ export default function CVBuilder() {
         const parsed = JSON.parse(saved)
         // migração: description string → string[]
         if (parsed.experience) {
-          parsed.experience = parsed.experience.map((e: Experience) => ({
-            ...e,
-            description: Array.isArray(e.description)
-              ? e.description
-              : e.description.split('\n').map((s: string) => s.trim()).filter(Boolean),
-          }))
+          parsed.experience = parsed.experience.map((e: Experience) => {
+            const desc = e.description as unknown
+            return {
+              ...e,
+              description: Array.isArray(desc)
+                ? desc
+                : (desc as string).split('\n').map((s: string) => s.trim()).filter(Boolean),
+            }
+          })
         }
         if (parsed.projects) {
-          parsed.projects = parsed.projects.map((p: Project) => ({
-            ...p,
-            description: Array.isArray(p.description)
-              ? p.description
-              : p.description.split('\n').map((s: string) => s.trim()).filter(Boolean),
-          }))
+          parsed.projects = parsed.projects.map((p: Project) => {
+            const desc = p.description as unknown
+            return {
+              ...p,
+              description: Array.isArray(desc)
+                ? desc
+                : (desc as string).split('\n').map((s: string) => s.trim()).filter(Boolean),
+            }
+          })
         }
         // migração: skills string[] → SkillGroup[]
         if (parsed.skills && parsed.skills.length > 0 && typeof parsed.skills[0] === 'string') {
