@@ -77,6 +77,8 @@ const initialData: CVData = {
 }
 
 const STORAGE_KEY = 'cv-template-data'
+const LANGUAGE_STORAGE_KEY = 'cv-template-language'
+const TYPOGRAPHY_STORAGE_KEY = 'cv-template-typography'
 const EXPORT_SCHEMA_VERSION = 1
 
 function normalizeImportedData(parsed: Record<string, unknown>): CVData {
@@ -158,6 +160,14 @@ export default function CVBuilder() {
       if (saved) {
         setData(normalizeImportedData(JSON.parse(saved)))
       }
+      const savedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY)
+      if (savedLanguage && savedLanguage in LANGUAGE_LABELS) {
+        setLanguage(savedLanguage as Language)
+      }
+      const savedTypography = localStorage.getItem(TYPOGRAPHY_STORAGE_KEY)
+      if (savedTypography) {
+        setTypography((prev) => ({ ...prev, ...JSON.parse(savedTypography) }))
+      }
     } catch {
       // storage indisponível
     }
@@ -167,6 +177,24 @@ export default function CVBuilder() {
     setData(newData)
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newData))
+    } catch {
+      // storage indisponível
+    }
+  }
+
+  function handleLanguageChange(newLanguage: Language) {
+    setLanguage(newLanguage)
+    try {
+      localStorage.setItem(LANGUAGE_STORAGE_KEY, newLanguage)
+    } catch {
+      // storage indisponível
+    }
+  }
+
+  function handleTypographyChange(newTypography: CVTypography) {
+    setTypography(newTypography)
+    try {
+      localStorage.setItem(TYPOGRAPHY_STORAGE_KEY, JSON.stringify(newTypography))
     } catch {
       // storage indisponível
     }
@@ -217,10 +245,10 @@ export default function CVBuilder() {
       const { language: importedLanguage, typography: importedTypography, ...cvFields } = parsed
       handleChange(normalizeImportedData(cvFields))
       if (typeof importedLanguage === 'string' && importedLanguage in LANGUAGE_LABELS) {
-        setLanguage(importedLanguage as Language)
+        handleLanguageChange(importedLanguage as Language)
       }
       if (importedTypography && typeof importedTypography === 'object') {
-        setTypography((prev) => ({ ...prev, ...importedTypography }))
+        handleTypographyChange({ ...typography, ...importedTypography })
       }
     } catch {
       window.alert('Não foi possível importar o arquivo. Verifique se é um JSON de currículo válido.')
@@ -278,7 +306,7 @@ export default function CVBuilder() {
   return (
     <div className="flex h-screen overflow-hidden bg-gray-100">
       <div className="w-1/2 overflow-y-auto border-r border-gray-200 bg-white" style={{ fontFamily: "var(--font-roboto), sans-serif" }}>
-        <CVForm data={data} onChange={handleChange} typography={typography} onTypographyChange={setTypography} onPrint={() => handlePrint()} language={language} onLanguageChange={setLanguage} onExport={handleExport} onImport={handleImport} />
+        <CVForm data={data} onChange={handleChange} typography={typography} onTypographyChange={handleTypographyChange} onPrint={() => handlePrint()} language={language} onLanguageChange={handleLanguageChange} onExport={handleExport} onImport={handleImport} />
       </div>
       <div className="w-1/2 overflow-y-auto bg-gray-100 p-8">
         {overflowing && (
