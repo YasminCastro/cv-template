@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, FileJson, Settings2, Upload } from "lucide-react";
 import { CVTypography, TypographyEntry } from "./cvTypography";
 import { Language, LANGUAGE_LABELS } from "./cvLocale";
 
@@ -50,6 +50,7 @@ export default function CVFormHeader({
   onImport,
 }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [jsonDialogOpen, setJsonDialogOpen] = useState(false);
 
   function updateTypographyField(
     key: keyof CVTypography,
@@ -66,6 +67,12 @@ export default function CVFormHeader({
     const file = e.target.files?.[0];
     if (file) onImport(file);
     e.target.value = "";
+    setJsonDialogOpen(false);
+  }
+
+  function handleExportClick() {
+    onExport();
+    setJsonDialogOpen(false);
   }
 
   return (
@@ -74,20 +81,7 @@ export default function CVFormHeader({
       <div className="flex items-center gap-2">
         <Dialog>
           <DialogTrigger className="flex items-center gap-1.5 rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="13"
-              height="13"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="12" cy="12" r="3" />
-              <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14" />
-            </svg>
+            <Settings2 size={13} />
             Tipografia
           </DialogTrigger>
           <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto font-(family-name:--font-roboto)">
@@ -151,48 +145,33 @@ export default function CVFormHeader({
           onChange={handleFileChange}
           className="hidden"
         />
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          className="flex items-center gap-1.5 rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="13"
-            height="13"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="17 8 12 3 7 8" />
-            <line x1="12" y1="3" x2="12" y2="15" />
-          </svg>
-          Importar JSON
-        </button>
-        <button
-          onClick={onExport}
-          className="flex items-center gap-1.5 rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="13"
-            height="13"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
-          Exportar JSON
-        </button>
+        <Dialog open={jsonDialogOpen} onOpenChange={setJsonDialogOpen}>
+          <DialogTrigger className="flex items-center gap-1.5 rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+            <FileJson size={13} />
+            JSON
+          </DialogTrigger>
+          <DialogContent className="max-w-sm font-(family-name:--font-roboto)">
+            <DialogHeader>
+              <DialogTitle>Importar / Exportar JSON</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-2 mt-2">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="flex w-full items-center gap-2 rounded-md border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <Upload size={14} />
+                Importar JSON
+              </button>
+              <button
+                onClick={handleExportClick}
+                className="flex w-full items-center gap-2 rounded-md border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <Download size={14} />
+                Exportar JSON
+              </button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
       <Button
         onClick={onPrint}
