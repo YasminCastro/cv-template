@@ -169,17 +169,27 @@ export default function CVBuilder() {
     }
   }
   const cvRef = useRef<HTMLDivElement>(null)
-  const [overflowing, setOverflowing] = useState(false)
+  const [overflowPx, setOverflowPx] = useState(0)
+  const overflowing = overflowPx > 0
 
   useEffect(() => {
     const el = cvRef.current
     if (!el) return
     const ro = new ResizeObserver(() => {
-      setOverflowing(el.scrollHeight > 1056)
+      setOverflowPx(Math.max(0, el.scrollHeight - 1056))
     })
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
+
+  // Estimativa de quantas linhas remover para caber em 1 página,
+  // baseada na altura de linha da tipografia do corpo do texto.
+  const linesToRemove = useMemo(() => {
+    if (overflowPx <= 0) return 0
+    const fontSizePx = parseFloat(typography.textos.fontSize) || 13
+    const lineHeightPx = parseFloat(typography.textos.lineHeight) || fontSizePx
+    return Math.ceil(overflowPx / lineHeightPx)
+  }, [overflowPx, typography.textos])
 
   const origin = useMemo(() => typeof window !== 'undefined' ? window.location.origin : '', [])
 
@@ -240,7 +250,7 @@ export default function CVBuilder() {
         {overflowing && (
           <div className="mb-4 flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-800">
             <span>⚠️</span>
-            <span>Conteúdo ultrapassa 1 página — o PDF será cortado.</span>
+            <span>Conteúdo ultrapassa 1 página — o PDF será cortado. Remova cerca de {linesToRemove} {linesToRemove === 1 ? 'linha' : 'linhas'} para caber em 1 página.</span>
           </div>
         )}
         <ScaledPreview>
