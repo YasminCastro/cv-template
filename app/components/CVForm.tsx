@@ -41,6 +41,8 @@ type Props = {
   onPrint: () => void;
   language: Language;
   onLanguageChange: (l: Language) => void;
+  onExport: () => void;
+  onImport: (file: File) => void;
 };
 
 function randomId() {
@@ -606,6 +608,8 @@ export default function CVForm({
   onPrint,
   language,
   onLanguageChange,
+  onExport,
+  onImport,
 }: Props) {
   const sensors = useSensors(useSensor(PointerSensor));
 
@@ -761,6 +765,8 @@ export default function CVForm({
         language={language}
         onLanguageChange={onLanguageChange}
         onPrint={onPrint}
+        onExport={onExport}
+        onImport={onImport}
       />
 
       {/* Dados Pessoais */}

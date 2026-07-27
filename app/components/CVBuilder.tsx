@@ -5,7 +5,7 @@ import { useReactToPrint } from 'react-to-print'
 import CVForm from './CVForm'
 import CVPreview from './CVPreview'
 import { cvTypography, CVTypography } from './cvTypography'
-import { Language } from './cvLocale'
+import { Language, LANGUAGE_LABELS } from './cvLocale'
 
 
 export type Experience = {
@@ -77,6 +77,37 @@ const initialData: CVData = {
 }
 
 const STORAGE_KEY = 'cv-template-data'
+const EXPORT_SCHEMA_VERSION = 1
+
+function normalizeImportedData(parsed: Record<string, unknown>): CVData {
+  const raw = { ...parsed }
+  if (Array.isArray(raw.experience)) {
+    raw.experience = (raw.experience as Experience[]).map((e) => {
+      const desc = e.description as unknown
+      return {
+        ...e,
+        description: Array.isArray(desc)
+          ? desc
+          : (desc as string).split('\n').map((s: string) => s.trim()).filter(Boolean),
+      }
+    })
+  }
+  if (Array.isArray(raw.projects)) {
+    raw.projects = (raw.projects as Project[]).map((p) => {
+      const desc = p.description as unknown
+      return {
+        ...p,
+        description: Array.isArray(desc)
+          ? desc
+          : (desc as string).split('\n').map((s: string) => s.trim()).filter(Boolean),
+      }
+    })
+  }
+  if (Array.isArray(raw.skills) && raw.skills.length > 0 && typeof raw.skills[0] === 'string') {
+    raw.skills = [{ id: Math.random().toString(36).slice(2, 9), title: 'Habilidades técnicas', text: (raw.skills as string[]).join(', ') }]
+  }
+  return { ...initialData, ...raw } as CVData
+}
 
 function ScaledPreview({ children }: { children: React.ReactNode }) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -125,35 +156,7 @@ export default function CVBuilder() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY)
       if (saved) {
-        const parsed = JSON.parse(saved)
-        // migração: description string → string[]
-        if (parsed.experience) {
-          parsed.experience = parsed.experience.map((e: Experience) => {
-            const desc = e.description as unknown
-            return {
-              ...e,
-              description: Array.isArray(desc)
-                ? desc
-                : (desc as string).split('\n').map((s: string) => s.trim()).filter(Boolean),
-            }
-          })
-        }
-        if (parsed.projects) {
-          parsed.projects = parsed.projects.map((p: Project) => {
-            const desc = p.description as unknown
-            return {
-              ...p,
-              description: Array.isArray(desc)
-                ? desc
-                : (desc as string).split('\n').map((s: string) => s.trim()).filter(Boolean),
-            }
-          })
-        }
-        // migração: skills string[] → SkillGroup[]
-        if (parsed.skills && parsed.skills.length > 0 && typeof parsed.skills[0] === 'string') {
-          parsed.skills = [{ id: Math.random().toString(36).slice(2, 9), title: 'Habilidades técnicas', text: parsed.skills.join(', ') }]
-        }
-        setData({ ...initialData, ...parsed })
+        setData(normalizeImportedData(JSON.parse(saved)))
       }
     } catch {
       // storage indisponível
@@ -192,6 +195,37 @@ export default function CVBuilder() {
   }, [overflowPx, typography.textos])
 
   const origin = useMemo(() => typeof window !== 'undefined' ? window.location.origin : '', [])
+
+  function handleExport() {
+    const payload = { schemaVersion: EXPORT_SCHEMA_VERSION, ...data, language, typography }
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${data.name ? data.name.replace(/\s+/g, '_') : 'curriculo'}.json`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+  }
+
+  async function handleImport(file: File) {
+    try {
+      const text = await file.text()
+      const parsed = JSON.parse(text)
+      delete parsed.schemaVersion
+      const { language: importedLanguage, typography: importedTypography, ...cvFields } = parsed
+      handleChange(normalizeImportedData(cvFields))
+      if (typeof importedLanguage === 'string' && importedLanguage in LANGUAGE_LABELS) {
+        setLanguage(importedLanguage as Language)
+      }
+      if (importedTypography && typeof importedTypography === 'object') {
+        setTypography((prev) => ({ ...prev, ...importedTypography }))
+      }
+    } catch {
+      window.alert('Não foi possível importar o arquivo. Verifique se é um JSON de currículo válido.')
+    }
+  }
 
   const handlePrint = useReactToPrint({
     contentRef: cvRef,
@@ -244,7 +278,7 @@ export default function CVBuilder() {
   return (
     <div className="flex h-screen overflow-hidden bg-gray-100">
       <div className="w-1/2 overflow-y-auto border-r border-gray-200 bg-white" style={{ fontFamily: "var(--font-roboto), sans-serif" }}>
-        <CVForm data={data} onChange={handleChange} typography={typography} onTypographyChange={setTypography} onPrint={() => handlePrint()} language={language} onLanguageChange={setLanguage} />
+        <CVForm data={data} onChange={handleChange} typography={typography} onTypographyChange={setTypography} onPrint={() => handlePrint()} language={language} onLanguageChange={setLanguage} onExport={handleExport} onImport={handleImport} />
       </div>
       <div className="w-1/2 overflow-y-auto bg-gray-100 p-8">
         {overflowing && (
