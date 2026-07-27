@@ -198,7 +198,7 @@ export default function CVFormHeader({
         onClick={onPrint}
         size="icon-lg"
         aria-label="Baixar PDF"
-        className="fixed top-6 right-6 z-50 size-14 rounded-full bg-blue-600 text-white shadow-lg shadow-black/10 hover:bg-blue-500 hover:shadow-xl hover:-translate-y-0.5"
+        className="fixed bottom-6 right-6 z-50 size-14 rounded-full bg-blue-600 text-white shadow-lg shadow-black/10 hover:bg-blue-500 hover:shadow-xl hover:-translate-y-0.5"
       >
         <Download className="size-6" />
       </Button>
